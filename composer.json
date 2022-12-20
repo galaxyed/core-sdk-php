@@ -28,7 +28,7 @@
   ],
   "homepage": "https://github.com/auth0/auth0-PHP",
   "require": {
-    "php": "^7.3.33",
+    "php": "^8.0",
     "ext-filter": "*",
     "ext-json": "*",
     "ext-mbstring": "*",
