@@ -105,7 +105,7 @@ class Auth0
      *
      * @var string
      */
-    protected $scope = 'openid profile email';
+    protected $scope = 'openid offline';
 
     /**
      * Auth0 Refresh Token
@@ -292,7 +292,7 @@ class Auth0
         $this->audience      = $config['audience'] ?? null;
         $this->responseMode  = $config['response_mode'] ?? 'query';
         $this->responseType  = $config['response_type'] ?? 'code';
-        $this->scope         = $config['scope'] ?? 'openid profile email';
+        $this->scope         = $config['scope'] ?? 'openid offline';
         $this->guzzleOptions = $config['guzzle_options'] ?? [];
         $this->skipUserinfo  = $config['skip_userinfo'] ?? true;
         $this->enablePkce    = $config['enable_pkce'] ?? false;

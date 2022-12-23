@@ -445,7 +445,7 @@ class Auth0Test extends TestCase
 
         $url_query = explode( '&', $parsed_url['query'] );
 
-        $this->assertContains( 'scope=openid%20profile%20email', $url_query );
+        $this->assertContains( 'scope=openid%20offline', $url_query );
         $this->assertContains( 'response_type=code', $url_query );
         $this->assertContains( 'redirect_uri=__test_redirect_uri__', $url_query );
         $this->assertContains( 'client_id=__test_client_id__', $url_query );
@@ -481,7 +481,7 @@ class Auth0Test extends TestCase
         $auth0 = new Auth0( self::$baseConfig );
 
         $override_params = [
-            'scope' => 'openid profile email',
+            'scope' => 'openid offline',
             'response_type' => 'id_token',
             'response_mode' => 'form_post',
         ];
@@ -490,7 +490,7 @@ class Auth0Test extends TestCase
         $parsed_url_query = parse_url( $auth_url, PHP_URL_QUERY );
         $url_query        = explode( '&', $parsed_url_query );
 
-        $this->assertContains( 'scope=openid%20profile%20email', $url_query );
+        $this->assertContains( 'scope=openid%20offline', $url_query );
         $this->assertContains( 'response_type=id_token', $url_query );
         $this->assertContains( 'response_mode=form_post', $url_query );
         $this->assertContains( 'redirect_uri=__test_redirect_uri__', $url_query );
