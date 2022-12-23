@@ -106,7 +106,7 @@ class RefreshTokenTest extends ApiTests
         $api->call()->refresh_token( $refresh_token );
 
         $this->assertEquals( 'POST', $api->getHistoryMethod() );
-        $this->assertEquals( 'https://test-domain.auth0.com/oauth/token', $api->getHistoryUrl() );
+        $this->assertEquals( 'https://test-domain.auth0.com/oauth2/token', $api->getHistoryUrl() );
         $this->assertEmpty( $api->getHistoryQuery() );
 
         $headers = $api->getHistoryHeaders();

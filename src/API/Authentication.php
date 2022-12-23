@@ -358,7 +358,7 @@ class Authentication
     }
 
     /**
-     * Makes a call to the `oauth/token` endpoint.
+     * Makes a call to the `oauth2/token` endpoint.
      *
      * @param array $options Options for the token endpoint request.
      *      - options.grant_type    Grant type to use; required.
@@ -386,7 +386,7 @@ class Authentication
         }
 
         $request = $this->apiClient->method('post')
-            ->addPath( 'oauth', 'token' )
+            ->addPath( 'oauth2', 'token' )
             ->withBody(json_encode($options));
 
         if (isset($options['auth0_forwarded_for'])) {
@@ -398,7 +398,7 @@ class Authentication
     }
 
     /**
-     * Makes a call to the `oauth/token` endpoint with `authorization_code` grant type
+     * Makes a call to the `oauth2/token` endpoint with `authorization_code` grant type
      *
      * @param string      $code          Authorization code received during login.
      * @param string      $redirect_uri  Redirect URI sent with authorize request.
@@ -429,7 +429,7 @@ class Authentication
     }
 
     /**
-     * Makes a call to the `oauth/token` endpoint with `password-realm` grant type.
+     * Makes a call to the `oauth2/token` endpoint with `password-realm` grant type.
      *
      * @param array       $options    Options for this grant.
      *      - options.username Username or email of the user logging in; required.
@@ -467,7 +467,7 @@ class Authentication
     }
 
     /**
-     * Makes a call to the `oauth/token` endpoint with `password` grant type
+     * Makes a call to the `oauth2/token` endpoint with `password` grant type
      *
      * @param array       $options    Options for this grant.
      *      - options.username Username or email of the user logging in; required.
@@ -502,7 +502,7 @@ class Authentication
     }
 
     /**
-     * Makes a call to the `oauth/token` endpoint with `client_credentials` grant type.
+     * Makes a call to the `oauth2/token` endpoint with `client_credentials` grant type.
      *
      * @param array $options Information required for this grant.
      *      - options.client_id     Application Client ID.

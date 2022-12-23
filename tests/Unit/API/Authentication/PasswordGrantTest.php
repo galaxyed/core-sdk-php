@@ -114,7 +114,7 @@ class PasswordGrantTest extends ApiTests
             'password' => 'the_password',
         ] );
 
-        $this->assertEquals( 'https://test-domain.auth0.com/oauth/token', $api->getHistoryUrl() );
+        $this->assertEquals( 'https://test-domain.auth0.com/oauth2/token', $api->getHistoryUrl() );
 
         $request_headers = $api->getHistoryHeaders();
         $this->assertArrayHasKey( 'Auth0-Client', $request_headers );
@@ -147,7 +147,7 @@ class PasswordGrantTest extends ApiTests
             'realm'    => 'the_realm',
         ] );
 
-        $this->assertEquals( 'https://test-domain.auth0.com/oauth/token', $api->getHistoryUrl() );
+        $this->assertEquals( 'https://test-domain.auth0.com/oauth2/token', $api->getHistoryUrl() );
 
         $request_body = $api->getHistoryBody();
         $this->assertEquals( 'the_realm', $request_body['realm'] );

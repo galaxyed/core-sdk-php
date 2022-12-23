@@ -430,7 +430,7 @@ class Auth0Test extends TestCase
         $this->assertEquals( '__test_client_secret__', $renew_body['client_secret'] );
         $this->assertEquals( '__test_client_id__', $renew_body['client_id'] );
         $this->assertEquals( '2.3.4', $renew_body['refresh_token'] );
-        $this->assertEquals( 'https://__test_domain__/oauth/token', (string) $renew_request->getUri() );
+        $this->assertEquals( 'https://__test_domain__/oauth2/token', (string) $renew_request->getUri() );
     }
 
     public function testThatGetLoginUrlUsesDefaultValues()
