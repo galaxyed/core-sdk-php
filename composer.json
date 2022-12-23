@@ -1,13 +1,10 @@
 {
-  "name": "auth0/auth0-php",
-  "description": "Auth0 PHP SDK.",
-  "homepage": "https://github.com/auth0/auth0-PHP",
+  "name": "icanid/icanid-sdk-php",
+  "description": "ICAN ID PHP SDK.",
+  "homepage": "https://github.com/galaxyed/core-sdk-php",
   "license": "MIT",
   "authors": [
     {
-      "name": "Auth0",
-      "email": "support@auth0.com",
-      "homepage": "http://www.auth0.com/"
     }
   ],
   "require": {
