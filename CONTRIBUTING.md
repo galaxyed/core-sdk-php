@@ -6,32 +6,26 @@ When contributing to this SDK, please:
 
 - Maintain the minimum PHP version (found under `require.php` in `composer.json` for the branch).
 - Code to the [PSR-2 standard](https://github.com/php-fig/fig-standards/blob/master/accepted/PSR-2-coding-style-guide.md).
-- Ensure all tests are passing on the whole project before submitting your PR, specifically `composer tests` and `composer tests:phpversions`
+- Run `composer pre-commit` for the whole project before submitting your PR for review. You can add this to a pre-commit hook with the following:
+
+```bash
+echo '#!/bin/sh' > .git/hooks/pre-commit && echo 'composer pre-commit' >> .git/hooks/pre-commit
+```
+
+- Run `composer phpcs` for the changed PHP files before submitting your PR for review (optional). 
 - Keep PRs focused and change the minimum number of lines to achieve your goal.
 
 ### Running static analysis
 
-Prior to making a PR, please ensure that the unit tests pass and the static analysis suite detects no defects:
+Prior to making a PR, make sure the static analysis suite detects no defects:
 
-`composer tests`
+`composer static-analysis`
 
-You can add this to a pre-commit hook with the following:
+### Running unit tests
 
-```
-echo '#!/bin/sh' > .git/hooks/pre-commit && echo 'composer tests' >> .git/hooks/pre-commit
-```
+Prior to making a PR, ensure that the unit tests pass:
 
-Ensure it's executable: `chmod 0700 .git/hooks/pre-commit`
-
-> Note: you need [Xdebug](https://xdebug.org/) installed. In Xdebug 3.x you need the following modes enabled: `xdebug.mode = develop,coverage,debug`
-
-### PHP version-specific tests
-
-Prior to making a PR, please ensure that the PHP version-specific tests pass (required Docker):
-
-`compooser tests:phpversions`
-
-> Note: ensure `docker/entrypoint.sh` is executable.
+`composer test-unit`
 
 ### Running integration tests
 

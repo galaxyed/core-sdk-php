@@ -1,89 +1,249 @@
 <?php
 
-declare(strict_types=1);
 
-uses()->group('management', 'management.log_streams');
+namespace Auth0\Tests\unit\API\Management;
 
-beforeEach(function(): void {
-    $this->endpoint = $this->api->mock()->logStreams();
-});
 
-test('getAll() issues an appropriate request', function(): void {
-    $this->endpoint->getAll();
+use Auth0\SDK\API\Helpers\InformationHeaders;
+use Auth0\SDK\Exception\EmptyOrInvalidParameterException;
+use GuzzleHttp\Psr7\Response;
+use Auth0\Tests\API\ApiTests;
 
-    expect($this->api->getRequestMethod())->toEqual('GET');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/log-streams');
-});
+class LogStreamsTest extends ApiTests
+{
+    /**
+     * Expected telemetry value.
+     *
+     * @var string
+     */
+    protected static $expectedTelemetry;
 
-test('get() issues an appropriate request', function(): void {
-    $this->endpoint->get('123');
+    /**
+     * Default request headers.
+     *
+     * @var array
+     */
+    protected static $headers = [ 'content-type' => 'json' ];
 
-    expect($this->api->getRequestMethod())->toEqual('GET');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/log-streams/123');
-});
+    /**
+     * Runs before test suite starts.
+     */
+    public static function setUpBeforeClass(): void
+    {
+        $infoHeadersData = new InformationHeaders;
+        $infoHeadersData->setCorePackage();
+        self::$expectedTelemetry = $infoHeadersData->build();
+    }
 
-test('create() issues an appropriate request', function(): void {
-    $mock = (object) [
-        'type' => uniqid(),
-        'sink' => [
-            'httpEndpoint' => uniqid(),
-            'httpContentFormat' => uniqid(),
-            'httpContentType' => uniqid(),
-            'httpAuthorization' => uniqid(),
-        ],
-        'name' => uniqid(),
-    ];
+    public function testThatGetAllRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-    $this->endpoint->create($mock->type, $mock->sink, $mock->name);
+        $api->call()->logStreams()->getAll();
 
-    expect($this->api->getRequestMethod())->toEqual('POST');
-    expect($this->api->getRequestUrl())->toEndWith('/api/v2/log-streams');
+        $this->assertEquals( 'GET', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/log-streams', $api->getHistoryUrl() );
 
-    $headers = $this->api->getRequestHeaders();
-    expect($headers['Content-Type'][0])->toEqual('application/json');
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
 
-    $body = $this->api->getRequestBody();
-    $this->assertArrayHasKey('name', $body);
-    expect($body['name'])->toEqual($mock->name);
-    $this->assertArrayHasKey('type', $body);
-    expect($body['type'])->toEqual($mock->type);
-    $this->assertArrayHasKey('sink', $body);
-    expect($body['sink'])->toEqual($mock->sink);
+    public function testThatGetLogStreamRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-    $body = $this->api->getRequestBodyAsString();
-    expect($body)->toEqual(json_encode($mock));
-});
+        $api->call()->logStreams()->get('123');
 
-test('update() issues an appropriate request', function(): void {
-    $mock = (object) [
-        'id' => uniqid(),
-        'body' => [
-            'name' => uniqid()
-        ]
-    ];
+        $this->assertEquals( 'GET', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/log-streams/123', $api->getHistoryUrl() );
 
-    $this->endpoint->update($mock->id, $mock->body);
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
 
-    expect($this->api->getRequestMethod())->toEqual('PATCH');
-    expect($this->api->getRequestUrl())->toEndWith('/api/v2/log-streams/' . $mock->id);
+    public function testThatGetLogStreamWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
 
-    $headers = $this->api->getRequestHeaders();
-    expect($headers['Content-Type'][0])->toEqual('application/json');
+        try {
+            $api->call()->logStreams()->get( '' );
+            $exception_message = '';
+        } catch (EmptyOrInvalidParameterException $e) {
+            $exception_message = $e->getMessage();
+        }
 
-    $body = $this->api->getRequestBody();
-    $this->assertArrayHasKey('name', $body);
-    expect($body['name'])->toEqual($mock->body['name']);
+        $this->assertStringContainsString( 'Empty or invalid log_stream_id', $exception_message );
+    }
 
-    $body = $this->api->getRequestBodyAsString();
-    expect($body)->toEqual(json_encode($mock->body));
-});
+    public function testThatCreateLogStreamRequestIsFormedCorrectly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-test('delete() issues an appropriate request', function(): void {
-    $this->endpoint->delete('123');
+        $api->call()->logStreams()->create([
+            'name' => 'Test Stream',
+            'type' => 'http',
+            'sink' => [
+                'httpEndpoint' => 'https://me.org',
+                'httpContentFormat' => 'JSONLINES',
+                'httpContentType' => 'application/json',
+                'httpAuthorization' => 'abc123'
+            ]
+        ]);
 
-    expect($this->api->getRequestMethod())->toEqual('DELETE');
-    expect($this->api->getRequestUrl())->toEndWith('/api/v2/log-streams/123');
+        $this->assertEquals( 'POST', $api->getHistoryMethod() );
+        $this->assertEquals( 'https://api.test.local/api/v2/log-streams', $api->getHistoryUrl() );
 
-    $headers = $this->api->getRequestHeaders();
-    expect($headers['Content-Type'][0])->toEqual('application/json');
-});
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+
+        $body = $api->getHistoryBody();
+        $this->assertArrayHasKey( 'name', $body );
+        $this->assertEquals( 'Test Stream', $body['name'] );
+        $this->assertArrayHasKey( 'type', $body );
+        $this->assertEquals( 'http', $body['type'] );
+        $this->assertArrayHasKey( 'sink', $body );
+        $this->assertEquals('https://me.org', $body['sink']['httpEndpoint']);
+        $this->assertEquals('JSONLINES', $body['sink']['httpContentFormat']);
+        $this->assertEquals('application/json', $body['sink']['httpContentType']);
+        $this->assertEquals('abc123', $body['sink']['httpAuthorization']);
+    }
+
+    public function testThatCreateLogStreamRequestWithEmptyDataThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        try {
+            $api->call()->logStreams()->create( [] );
+            $exception_message = '';
+        } catch (EmptyOrInvalidParameterException $e) {
+            $exception_message = $e->getMessage();
+        }
+
+        $this->assertStringContainsString( 'Missing required "data" parameter', $exception_message );
+    }
+
+    public function testThatCreateLogStreamRequestWithEmptyTypeThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        try {
+            $api->call()->logStreams()->create( [
+                'name' => 'test stream',
+                'sink' => [
+                    'httpEndpoint' => 'https://me.org',
+                    'httpContentFormat' => 'JSONLINES',
+                    'httpContentType' => 'application/json',
+                    'httpAuthorization' => 'abc123'
+                ]
+            ] );
+            $exception_message = '';
+        } catch (EmptyOrInvalidParameterException $e) {
+            $exception_message = $e->getMessage();
+        }
+
+        $this->assertStringContainsString( 'Missing required "type" field', $exception_message );
+    }
+
+    public function testThatCreateLogStreamRequestWithMissingSinkThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        try {
+            $api->call()->logStreams()->create( [
+                'name' => 'test stream',
+                'type' => 'http'
+            ] );
+            $exception_message = '';
+        } catch (EmptyOrInvalidParameterException $e) {
+            $exception_message = $e->getMessage();
+        }
+
+        $this->assertStringContainsString( 'Missing required "sink" field', $exception_message );
+    }
+
+    public function testThatCreateLogStreamRequestWithEmptySinkThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        try {
+            $api->call()->logStreams()->create( [
+                'name' => 'test stream',
+                'type' => 'http',
+                'sink' => [ ]
+            ] );
+            $exception_message = '';
+        } catch (EmptyOrInvalidParameterException $e) {
+            $exception_message = $e->getMessage();
+        }
+
+        $this->assertStringContainsString( 'Missing required "sink" field', $exception_message );
+    }
+
+    public function testThatUpdateLogStreamRequestIsFormedCorrectly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
+
+        $api->call()->logStreams()->update('123', [
+            'name' => 'Test Name'
+        ]);
+
+        $this->assertEquals( 'PATCH', $api->getHistoryMethod() );
+        $this->assertEquals( 'https://api.test.local/api/v2/log-streams/123', $api->getHistoryUrl() );
+
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+
+        $body = $api->getHistoryBody();
+        $this->assertArrayHasKey( 'name', $body );
+        $this->assertEquals( 'Test Name', $body['name'] );
+    }
+
+    public function testThatUpdateLogStreamRequestWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        try {
+            $api->call()->logStreams()->update('', [] );
+            $exception_message = '';
+        } catch (EmptyOrInvalidParameterException $e) {
+            $exception_message = $e->getMessage();
+        }
+
+        $this->assertStringContainsString( 'Missing required "log_stream_id" field', $exception_message );
+    }
+
+    public function testThatDeleteLogStreamRequestIsFormedCorrectly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
+
+        $api->call()->logStreams()->delete( '123' );
+
+        $this->assertEquals( 'DELETE', $api->getHistoryMethod() );
+        $this->assertEquals( 'https://api.test.local/api/v2/log-streams/123', $api->getHistoryUrl() );
+
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
+
+    public function testThatDeleteLogStreamRequestWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        try {
+        $api->call()->logStreams()->delete('' );
+            $exception_message = '';
+        } catch (EmptyOrInvalidParameterException $e) {
+            $exception_message = $e->getMessage();
+        }
+
+        $this->assertStringContainsString( 'Missing required "log_stream_id" field', $exception_message );
+    }
+}

@@ -1,129 +1,319 @@
-![auth0-php](https://cdn.auth0.com/website/sdks/banners/auth0-php-banner.png)
+<p align="center"><a href="https://auth0.com" target="_blank"><img src=".github/logo.svg?sanitize=true&raw=true" width="300"></a></p>
 
-PHP SDK for [Auth0](https://auth0.com) Authentication and Management APIs.
+<p align="center">
+<a href="https://circleci.com/gh/auth0/auth0-PHP"><img src="https://img.shields.io/circleci/project/github/auth0/auth0-PHP/master.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/auth0/auth0-PHP"><img src="https://img.shields.io/packagist/dt/auth0/auth0-PHP" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/auth0/auth0-PHP"><img src="https://img.shields.io/packagist/v/auth0/auth0-PHP?label=stable" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/auth0/auth0-PHP"><img src="https://img.shields.io/packagist/php-v/auth0/auth0-php" alt="PHP Support"></a>
+<a href="https://codecov.io/gh/auth0/auth0-PHP"><img src="https://codecov.io/gh/auth0/auth0-PHP/branch/master/graph/badge.svg" alt="Code Coverage"></a>
+<a href="https://packagist.org/packages/auth0/auth0-PHP"><img src="https://img.shields.io/packagist/l/auth0/auth0-php" alt="License"></a>
+<a href="https://app.fossa.com/projects/git%2Bgithub.com%2Fauth0%2Fauth0-PHP?ref=badge_shield"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fauth0%2Fauth0-PHP.svg?type=shield" alt="FOSSA"></a>
+</p>
 
-[![Package](https://img.shields.io/packagist/dt/auth0/auth0-php)](https://packagist.org/packages/auth0/auth0-php)
-[![Build](https://img.shields.io/github/workflow/status/auth0/auth0-php/Checks)](https://github.com/auth0/auth0-PHP/actions/workflows/checks.yml?query=branch%3Amain)
-[![Coverage](https://img.shields.io/codecov/c/github/auth0/auth0-php)](hhttps://app.codecov.io/gh/auth0/auth0-PHP)
-[![License](https://img.shields.io/packagist/l/auth0/auth0-php)](https://doge.mit-license.org/)
+Auth0 enables you to rapidly integrate authentication and authorization for your applications, so you can focus on your core business. ([Learn more](https://auth0.com/why-auth0))
 
-:books: [Documentation](#documentation) - :rocket: [Getting Started](#getting-started) - :computer: [API Reference](#api-reference) :speech_balloon: [Feedback](#feedback)
+Our PHP SDK provides a straight-forward and rigorously tested interface for accessing Auth0's Authentication and Management API endpoints through modern releases of PHP.
 
-## Documentation
+This is [one of many libraries we offer](https://auth0.com/docs/libraries) supporting numerous platforms.
 
-- Stateful Applications
-  - [Quickstart](https://auth0.com/docs/quickstart/webapp/php) — add login, logout and user information to a PHP application using Auth0.
-  - [Sample Application](https://github.com/auth0-samples/auth0-php-web-app) — a sample PHP web application integrated with Auth0.
-- Stateless Applications
-  - [Quickstart](https://auth0.com/docs/quickstart/backend/php) — add access token handling and route authorization to a backend PHP application using Auth0.
-  - [Sample Application](https://github.com/auth0-samples/auth0-php-api-samples) — a sample PHP backend application integrated with Auth0.
-- [Examples](./EXAMPLES.md) — code samples for common scenarios.
-- [Docs site](https://www.auth0.com/docs) — explore our docs site and learn more about Auth0.
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Getting Started](#getting-started)
+  - [Authentication API](#authentication-api)
+  - [Management API](#management-api)
+- [Examples](#examples)
+  - [Organizations](#organizations)
+    - [Logging in with an Organization](#logging-in-with-an-organization)
+    - [Accepting user invitations](#accepting-user-invitations)
+    - [Validation guidance](#validation-guidance)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [Support + Feedback](#support--feedback)
+- [Vulnerability Reporting](#vulnerability-reporting)
+- [What is Auth0?](#what-is-auth0)
+- [License](#license)
+
+## Requirements
+
+- PHP 7.3+ / 8.0+
+- [Composer](https://getcomposer.org/)
+
+## Installation
+
+The recommended way to install the SDK is through [Composer](https://getcomposer.org/):
+
+```bash
+$ composer require auth0/auth0-php
+```
+
+Guidance on setting up Composer and alternative installation methods can be found in our [documentation](https://auth0.com/docs/libraries/auth0-php#installation).
 
 ## Getting Started
 
-### Requirements
+To get started, you'll need to create a [free Auth0 account](https://auth0.com/signup) and register an [Application](https://auth0.com/docs/applications).
 
-PHP 8.0 or above. Your application will also need [PSR-17](https://packagist.org/providers/psr/http-factory-implementation) (HTTP factory) and [PSR-18](https://packagist.org/providers/psr/http-client-implementation) (HTTP client) compatible libraries installed.
+### Authentication API
 
-> This library follows the [PHP release support schedule](https://www.php.net/supported-versions.php). We do not support PHP versions that have reached end of life and no longer receive security updates.
-
-### Installation
-
-Add the dependency to your application with [Composer](https://getcomposer.org/):
-
-```
-composer require auth0/auth0-php
-```
-
-### Configure Auth0
-
-Create a **Regular Web Application** in the [Auth0 Dashboard](https://manage.auth0.com/#/applications). Verify that the "Token Endpoint Authentication Method" is set to `POST`.
-
-Next, configure the callback and logout URLs for your application under the "Application URIs" section of the "Settings" page:
-
-- **Allowed Callback URLs**: The URL of your application where Auth0 will redirect to during authentication, e.g., `http://localhost:3000/callback`.
-- **Allowed Logout URLs**: The URL of your application where Auth0 will redirect to after user logout, e.g., `http://localhost:3000/login`.
-
-Note the **Domain**, **Client ID**, and **Client Secret**. These values will be used later.
-
-### Add login to your application
-
-Create a `SdkConfiguration` instance configured with your Auth0 domain and Auth0 application client ID and secret. Generate a sufficiently long, random string for your `cookieSecret` using `openssl rand -hex 32`. Create a new `Auth0` instance and pass your configuration to it.
+Begin by instantiating the SDK and passing the relevant details from your Application's settings page:
 
 ```php
 use Auth0\SDK\Auth0;
-use Auth0\SDK\Configuration\SdkConfiguration;
 
-$configuration = new SdkConfiguration(
-    domain: 'Your Auth0 domain',
-    clientId: 'Your Auth0 application client ID',
-    clientSecret: 'Your Auth0 application client secret',
-    cookieSecret: 'Your generated string',
-);
+$auth0 = new Auth0([
+  // The values below are found on the Application settings tab.
+  'domain'        => '{YOUR_TENANT}.auth0.com',
+  'client_id'     => '{YOUR_APPLICATION_CLIENT_ID}',
+  'client_secret' => '{YOUR_APPLICATION_CLIENT_SECRET}',
 
-$auth0 = new Auth0($configuration);
+  // This is your application URL that will be used to process the login.
+  // Save this URL in the "Allowed Callback URLs" field on the Application settings tab
+  'redirect_uri' => 'https://{YOUR_APPLICATION_CALLBACK_URL}',
+]);
 ```
 
-Use `getCredentials()` to check if a user is signed in. Redirect guests to sign in using the Auth0 login page with `login()`:
+**Note:** _In a production application you should never hardcode these values. Consider using environment variables to store and pass these values to your application, as suggested in our [documentation](https://auth0.com/docs/libraries/auth0-php#getting-started)._
+
+Using the SDK, making requests to Auth0's endpoints couldn't be simpler. For example, signing users in using Auth0's [Universal Login](https://auth0.com/docs/universal-login) and retrieving user details can be done in a few lines of code:
 
 ```php
-$session = $auth0->getCredentials();
+// Do we have an authenticated session available?
+if ($user = $auth0->getUser()) {
+  // Output the authenticated user
+  print_r($user);
+  exit;
+}
 
-if (null === $session || $session->accessTokenExpired) {
-    header('Location: ' . $auth0->login());
-    exit;
+// No session was available, so redirect to Universal Login page
+$auth0->login();
+```
+
+Further examples of how you can use the Authentication API Client can be found on [our documentation site](https://auth0.com/docs/libraries/auth0-php/).
+
+### Management API
+
+This SDK also offers an interface for Auth0's Management API which, in order to access, requires an Access Token that is issued specifically for your tenant's Management API by specifying the corresponding Audience.
+
+The process for retrieving such an Access Token is described in our [documentation](https://auth0.com/docs/libraries/auth0-php/using-the-management-api-with-auth0-php).
+
+```php
+use Auth0\SDK\API\Management;
+
+$mgmt_api = new Management('{YOUR_ACCESS_TOKEN}', 'https://{YOUR_TENANT}.auth0.com');
+```
+
+The SDK provides convenient interfaces to the Management API's endpoints. For example, to search for users:
+
+```php
+$results = $mgmt_api->users()->getAll([
+  'q' => 'josh'
+]);
+
+if (! empty($results)) {
+  echo '<h2>User Search</h2>';
+
+  foreach ($results as $datum) {
+    printf(
+      '<p><strong>%s</strong> &lt;%s&gt; - %s</p>',
+      !empty($datum['nickname']) ? $datum['nickname'] : 'No nickname',
+      !empty($datum['email']) ? $datum['email'] : 'No email',
+      $datum['user_id']
+    );
+  }
 }
 ```
 
-Complete the authentication and obtain the tokens by calling `exchange()`:
+At the moment the best way to see what endpoints are covered is to read through the `\Auth0\SDK\API\Management` class, [available here](https://github.com/auth0/auth0-PHP/blob/master/src/API/Management.php).
+
+## Examples
+
+### Organizations
+
+[Organizations](https://auth0.com/docs/organizations) is a set of features that provide better support for developers who build and maintain SaaS and Business-to-Business (B2B) applications.
+
+Using Organizations, you can:
+
+- Represent teams, business customers, partner companies, or any logical grouping of users that should have different ways of accessing your applications, as organizations.
+- Manage their membership in a variety of ways, including user invitation.
+- Configure branded, federated login flows for each organization.
+- Implement role-based access control, such that users can have different roles when authenticating in the context of different organizations.
+- Build administration capabilities into your products, using Organizations APIs, so that those businesses can manage their own organizations.
+
+Note that Organizations is currently only available to customers on our Enterprise and Startup subscription plans.
+
+#### Logging in with an Organization
+
+Configure the Authentication API client with your Organization ID:
 
 ```php
-if (null !== $auth0->getExchangeParameters()) {
-    $auth0->exchange();
+use Auth0\SDK\Auth0;
+
+$auth0 = new Auth0([
+  // Found in your Auth0 dashboard, under Organization settings:
+  'organization' => '{YOUR_ORGANIZATION_ID}',
+
+  // Found in your Auth0 dashboard, under Application settings:
+  'domain'       => '{YOUR_TENANT}.auth0.com',
+  'client_id'    => '{YOUR_APPLICATION_CLIENT_ID}',
+  'redirect_uri' => 'https://{YOUR_APPLICATION_CALLBACK_URL}',
+]);
+```
+
+Redirect to the Universal Login page using the configured organization:
+
+```php
+$auth0->login();
+```
+
+#### Accepting user invitations
+
+Auth0 Organizations allow users to be invited using emailed links, which will direct a user back to your application. The URL the user will arrive at is based on your configured `Application Login URI`, which you can change from your Application's settings inside the Auth0 dashboard.
+
+When the user arrives at your application using an invite link, you can expect three query parameters to be provided: `invitation`, `organization`, and `organization_name`. These will always be delivered using a GET request.
+
+A helper function is provided to handle extracting these query parameters and automatically redirecting to the Universal Login page:
+
+```php
+// Expects the Auth0 SDK to be configured first, as demonstrated above.
+$auth0->handleInvitation();
+```
+
+If you prefer to have more control over this process, a separate helper function is provided for extracting the query parameters, `getInvitationParameters()`, which you can use to initiate the Universal Login redirect yourself:
+
+```php
+// Expects the Auth0 SDK to be configured first, as demonstrated above.
+
+// Returns an object containing the invitation query parameters, or null if they aren't present
+if ($invite = $auth0->getInvitationParameters()) {
+  // Does the invite organization match your intended organization?
+  if ($invite->organization !== '{YOUR_ORGANIZATION_ID}') {
+    throw new Exception("This invitation isn't intended for this service. Please have your administrator check the service configuration and request a new invitation.");
+  }
+
+  // Redirect to Universal Login using the emailed invitation
+  $auth0->login(null, null, [
+    'invitation'   => $invite->invitation,
+    'organization' => $invite->organization
+  ]);
 }
 ```
 
-Use `getUser()` to retrieve information about our authenticated user:
+After successful authentication via the Universal Login Page, the user will arrive back at your application using your configured `redirect_uri`, their token will be automatically validated, and the user will have an authenticated session. Use `getUser()` to retrieve details about the authenticated user.
+
+#### Validation guidance
+
+In the examples above, our application is operating with a single, configured Organization. By initializing the SDK with the `organization` option, we are telling the internal ID Token verifier (`IdTokenVerifier`) to validate an `org_id` claim's presence, and that it matches what we provided.
+
+Your application might not know the Organization ID ahead of time, or potentially need to support multiple organizations.
+
+Your application should validate an `org_id` claim itself to ensure the value received is expected and known by your application.
+
+This could be achieved by reading the value of "org_id" returned by the `getUser()` method. An example might look like this:
 
 ```php
-print_r($auth0->getUser());
+use Auth0\SDK\Auth0;
+
+// Example: a list of organizations our app supports
+$allowedOrganizations = ['org_123', 'org_456'];
+$defaultOrganization = $allowedOrganizations[0];
+
+// For this scenario, do not pass any `organization` during SDK initialization. You'll handle the organization validation yourself.
+$auth0 = new Auth0([
+  // Found in your Auth0 dashboard, under Application settings:
+  'domain'       => '{YOUR_TENANT}.auth0.com',
+  'client_id'    => '{YOUR_APPLICATION_CLIENT_ID}',
+  'redirect_uri' => 'https://{YOUR_APPLICATION_CALLBACK_URL}',
+]);
+
+// Are they authenticated?
+if ($user = $auth0->getUser()) {
+  // Do they have an organization claim?
+  if (! isset($user['org_id'])) {
+    // They do not; stop processing their request.
+    throw new Exception('Please sign in using an organization.');
+  }
+
+  // Does the claim match an expected organization?
+  if (! in_array($user['org_id'], $allowedOrganizations)) {
+    // It does not; stop processing their request.
+    throw new Exception('Access denied.');
+  }
+}
+
+// Do we have an incoming invitation?
+if ($invite = $auth0->getInvitationParameters()) {
+  // Is the invite for an expected organization?
+  if (! in_array($invite->organization, $allowedOrganizations)) {
+    throw new Exception("This invitation isn't intended for this service. Please have your administrator check the service configuration and request a new invitation.");
+  }
+
+  // Redirect to Universal Login using the invitation
+  $auth0->login(null, null, [
+    'invitation'   => $invite->invitation,
+    'organization' => $invite->organization
+  ]);
+}
+
+// Redirect to Universal Login using our default organization
+$auth0->login(null, null, [
+  'organization' => $defaultOrganization
+]);
+
 ```
 
-That's it! You have authenticated the user with Auth0. More examples can be found in [EXAMPLES.md](./EXAMPLES.md).
+If the claim can't be validated, your application should reject the token as invalid. See [https://auth0.com/docs/organizations/using-tokens](https://auth0.com/docs/organizations/using-tokens) for more information.
 
-## API Reference
+## Documentation
 
-- [API Reference](https://auth0.github.io/auth0-PHP/)
+- [Documentation](https://auth0.com/docs/libraries/auth0-php)
+  - [Installation](https://auth0.com/docs/libraries/auth0-php#installation)
+  - [Getting Started](https://auth0.com/docs/libraries/auth0-php#getting-started)
+  - [Basic Usage](https://auth0.com/docs/libraries/auth0-php/auth0-php-basic-use)
+  - [Authentication API](https://auth0.com/docs/libraries/auth0-php/using-the-authentication-api-with-auth0-php)
+  - [Management API](https://auth0.com/docs/libraries/auth0-php/using-the-management-api-with-auth0-php)
+  - [Troubleshooting](https://auth0.com/docs/libraries/auth0-php/troubleshoot-auth0-php-library)
+- Quickstarts
+  - [Basic authentication example](https://auth0.com/docs/quickstart/webapp/php/) ([GitHub repo](https://github.com/auth0-samples/auth0-php-web-app/tree/master/00-Starter-Seed))
+  - [Authenticated backend API example](https://auth0.com/docs/quickstart/backend/php/) ([GitHub repo](https://github.com/auth0-samples/auth0-php-api-samples/tree/master/01-Authenticate))
 
-## Feedback
+## Contributing
 
-### Contributing
+We appreciate your feedback and contributions to the project! Before you get started, please review the following:
 
-We appreciate feedback and contribution to this repo! Before you get started, please see the following:
+- [Auth0's general contribution guidelines](https://github.com/auth0/open-source-template/blob/master/GENERAL-CONTRIBUTING.md)
+- [Auth0's code of conduct guidelines](https://github.com/auth0/open-source-template/blob/master/CODE-OF-CONDUCT.md)
+- [The Auth0 PHP SDK contribution guide](CONTRIBUTING.md)
 
-- [Contribution Guide](./CONTRIBUTING.md)
-- [Auth0's General Contribution Guidelines](https://github.com/auth0/open-source-template/blob/master/GENERAL-CONTRIBUTING.md)
-- [Auth0's Code of Conduct Guidelines](https://github.com/auth0/open-source-template/blob/master/CODE-OF-CONDUCT.md)
+## Support + Feedback
 
-### Raise an issue
+- The [Auth0 Community](https://community.auth0.com/) is a valuable resource for asking questions and finding answers, staffed by the Auth0 team and a community of enthusiastic developers
+- For code-level support (such as feature requests and bug reports) we encourage you to [open issues](https://github.com/auth0/auth0-PHP/issues) here on our repo
+- For customers on [paid plans](https://auth0.com/pricing/), our [support center](https://support.auth0.com/) is available for opening tickets with our knowledgeable support specialists
 
-To provide feedback or report a bug, [please raise an issue on our issue tracker](https://github.com/auth0/auth0-PHP/issues).
+Further details about our support solutions are [available on our website.](https://auth0.com/docs/support)
 
-### Vulnerability Reporting
+## Vulnerability Reporting
 
-Please do not report security vulnerabilities on the public Github issue tracker. The [Responsible Disclosure Program](https://auth0.com/whitehat) details the procedure for disclosing security issues.
+Please do not report security vulnerabilities on the public GitHub issue tracker. The [Responsible Disclosure Program](https://auth0.com/whitehat) details the procedure for disclosing security issues.
 
----
+## What is Auth0?
 
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: light)" srcset="https://cdn.auth0.com/website/sdks/logos/auth0_light_mode.png" width="150">
-    <source media="(prefers-color-scheme: dark)" srcset="https://cdn.auth0.com/website/sdks/logos/auth0_dark_mode.png" width="150">
-    <img alt="Auth0 Logo" src="https://cdn.auth0.com/website/sdks/logos/auth0_light_mode.png" width="150">
-  </picture>
-</p>
+Auth0 helps you to:
 
-<p align="center">Auth0 is an easy to implement, adaptable authentication and authorization platform. To learn more checkout <a href="https://auth0.com/why-auth0">Why Auth0?</a></p>
+- Add authentication with [multiple authentication sources](https://docs.auth0.com/identityproviders), either social like Google, Facebook, Microsoft, LinkedIn, GitHub, Twitter, Box, Salesforce (amongst others), or enterprise identity systems like Windows Azure AD, Google Apps, Active Directory, ADFS or any SAML Identity Provider.
+- Add authentication through more traditional **[username/password databases](https://docs.auth0.com/mysql-connection-tutorial)**.
+- Add support for [passwordless](https://auth0.com/passwordless) and [multi-factor authentication](https://auth0.com/docs/mfa).
+- Add support for [linking different user accounts](https://docs.auth0.com/link-accounts) with the same user.
+- Analytics of how, when and where users are logging in.
+- Pull data from other sources and add it to the user profile, through [JavaScript rules](https://docs.auth0.com/rules).
 
-<p align="center">This project is licensed under the MIT license. See the <a href="./LICENSE"> LICENSE</a> file for more info.</p>
+[Why Auth0?](https://auth0.com/why-auth0)
+
+## License
+
+The Auth0 PHP SDK is open source software licensed under [the MIT license](https://opensource.org/licenses/MIT). See the [LICENSE](LICENSE.txt) file for more info.
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fauth0%2Fauth0-PHP.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fauth0%2Fauth0-PHP?ref=badge_large)
+
+```
+
+```

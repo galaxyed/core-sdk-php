@@ -1,141 +1,193 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Auth0\SDK\API\Management;
-
-use Auth0\SDK\Contract\API\Management\ConnectionsInterface;
-use Auth0\SDK\Utility\Request\RequestOptions;
-use Auth0\SDK\Utility\Toolkit;
-use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class Connections.
  * Handles requests to the Connections endpoint of the v2 Management API.
  *
- * @see https://auth0.com/docs/api/management/v2#!/Connections
+ * @package Auth0\SDK\API\Management
  */
-final class Connections extends ManagementEndpoint implements ConnectionsInterface
+class Connections extends GenericResource
 {
-    public function create(
-        string $name,
-        string $strategy,
-        ?array $body = null,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$name, $strategy] = Toolkit::filter([$name, $strategy])->string()->trim();
-        [$body] = Toolkit::filter([$body])->array()->trim();
-
-        Toolkit::assert([
-            [$name, \Auth0\SDK\Exception\ArgumentException::missing('name')],
-            [$strategy, \Auth0\SDK\Exception\ArgumentException::missing('strategy')],
-        ])->isString();
-
-        /** @var array<mixed> $body */
-
-        return $this->getHttpClient()->
-            method('post')->
-            addPath('connections')->
-            withBody(
-                (object) Toolkit::merge([
-                    'name'     => $name,
-                    'strategy' => $strategy,
-                ], $body),
-            )->
-            withOptions($options)->
-            call();
-    }
-
+    /**
+     * Get all Connections by page.
+     * Required scope: "read:connections"
+     *
+     * @param null|string       $strategy       Connection strategy to retrieve.
+     * @param null|string|array $fields         Fields to include or exclude from the result.
+     *      - Including only the fields required can speed up API calls significantly.
+     *      - Arrays will be converted to comma-separated strings.
+     * @param null|boolean      $include_fields True to include $fields, false to exclude $fields.
+     * @param null|integer      $page           Page number to get, zero-based.
+     * @param null|integer      $per_page       Number of results to get, null to return the default number.
+     * @param array             $add_params     Additional API parameters, over-written by function params.
+     *
+     * @return mixed
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Connections/get_connections
+     */
     public function getAll(
-        ?array $parameters = null,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$parameters] = Toolkit::filter([$parameters])->array()->trim();
+        $strategy = null,
+        $fields = null,
+        $include_fields = null,
+        $page = null,
+        $per_page = null,
+        array $add_params = []
+    )
+    {
+        // Set additional parameters first so they are over-written by function parameters.
+        $params = is_array($add_params) ? $add_params : [];
 
-        /** @var array<int|string|null> $parameters */
+        // Connection strategy to filter results by.
+        if (! empty($strategy)) {
+            $params['strategy'] = $strategy;
+        }
 
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('connections')->
-            withParams($parameters)->
-            withOptions($options)->
-            call();
+        // Results fields.
+        if (! empty($fields)) {
+            $params['fields'] = is_array($fields) ? implode(',', $fields) : $fields;
+            if (null !== $include_fields) {
+                $params['include_fields'] = $include_fields;
+            }
+        }
+
+        // Pagination.
+        if (null !== $page) {
+            $params['page'] = abs( (int) $page);
+            if (null !== $per_page) {
+                $params['per_page'] = $per_page;
+            }
+        }
+
+        return $this->apiClient->method('get')
+            ->addPath('connections')
+            ->withDictParams($params)
+            ->call();
     }
 
-    public function get(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+    /**
+     * Get a single Connection by ID.
+     * Required scope: "read:connections"
+     *
+     * @param string            $id             Connection ID to get.
+     * @param null|string|array $fields         Fields to include or exclude from the result.
+     *      - Including only the fields required can speed up API calls significantly.
+     *      - Arrays will be converted to comma-separated strings.
+     * @param null|boolean      $include_fields True to include $fields, false to exclude $fields.
+     *
+     * @return mixed|string
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Connections/get_connections_by_id
+     */
+    public function get($id, $fields = null, $include_fields = null)
+    {
+        $params = [];
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        // Results fields.
+        if (! empty($fields)) {
+            $params['fields'] = is_array($fields) ? implode(',', $fields) : $fields;
+            if (null !== $include_fields) {
+                $params['include_fields'] = $include_fields;
+            }
+        }
 
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('connections', $id)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('get')
+            ->addPath('connections', $id)
+            ->withDictParams($params)
+            ->call();
     }
 
-    public function update(
-        string $id,
-        ?array $body = null,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-        [$body] = Toolkit::filter([$body])->array()->trim();
-
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('patch')->
-            addPath('connections', $id)->
-            withBody((object) $body)->
-            withOptions($options)->
-            call();
+    /**
+     * Delete a Connection by ID.
+     * Required scope: "delete:connections"
+     *
+     * @param string $id Connection ID to delete.
+     *
+     * @return mixed|string
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Connections/delete_connections_by_id
+     */
+    public function delete($id)
+    {
+        return $this->apiClient->method('delete')
+            ->addPath('connections', $id)
+            ->call();
     }
 
-    public function delete(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('delete')->
-            addPath('connections', $id)->
-            withOptions($options)->
-            call();
+    /**
+     * Delete a specific User for a Connection.
+     * Required scope: "delete:users"
+     *
+     * @param string $id    Auth0 database Connection ID (user_id with strategy of "auth0").
+     * @param string $email Email of the user to delete.
+     *
+     * @return mixed|string
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Connections/delete_users_by_email
+     */
+    public function deleteUser($id, $email)
+    {
+        return $this->apiClient->method('delete')
+            ->addPath('connections', $id, 'users')
+            ->withParam('email', $email)
+            ->call();
     }
 
-    public function deleteUser(
-        string $id,
-        string $email,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id, $email] = Toolkit::filter([$id, $email])->string()->trim();
+    /**
+     * Create a new Connection.
+     * Required scope: "create:connections"
+     *
+     * @param array $data Connection create data; "name" and "strategy" fields are required.
+     *
+     * @return mixed|string
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Connections/post_connections
+     */
+    public function create(array $data)
+    {
+        if (empty($data['name'])) {
+            throw new \Exception('Missing required "name" field.');
+        }
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        if (empty($data['strategy'])) {
+            throw new \Exception('Missing required "strategy" field.');
+        }
 
-        Toolkit::assert([
-            [$email, \Auth0\SDK\Exception\ArgumentException::missing('email')],
-        ])->isEmail();
+        return $this->apiClient->method('post')
+            ->addPath('connections')
+            ->withBody(json_encode($data))
+            ->call();
+    }
 
-        return $this->getHttpClient()->
-            method('delete')->
-            addPath('connections', $id, 'users')->
-            withParam('email', $email)->
-            withOptions($options)->
-            call();
+    /**
+     * Update a Connection.
+     * Required scope: "update:connections"
+     *
+     * @param string $id   Connection ID to update.
+     * @param array  $data Connection data to update.
+     *
+     * @return mixed|string
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Connections/patch_connections_by_id
+     */
+    public function update($id, array $data)
+    {
+        return $this->apiClient->method('patch')
+            ->addPath('connections', $id)
+            ->withBody(json_encode($data))
+            ->call();
     }
 }

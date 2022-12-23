@@ -1,262 +1,286 @@
 <?php
+namespace Auth0\Tests\Store;
 
-declare(strict_types=1);
-
-use Auth0\SDK\Configuration\SdkConfiguration;
 use Auth0\SDK\Store\CookieStore;
-use Auth0\Tests\Utilities\MockCrypto;
-use Auth0\Tests\Utilities\MockDataset;
+use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Error\Warning;
+use ReflectionClass;
 
-uses()->group('storage', 'storage.cookies');
+/**
+ * Class CookieStoreTest.
+ * Tests the CookieStore class.
+ */
+class CookieStoreTest extends TestCase
+{
 
-beforeEach(function(): void {
-    $this->namespace = uniqid();
-    $this->cookieSecret = uniqid() . bin2hex(random_bytes(32));
+    private static $mockSpyCookie;
 
-    $this->configuration = new SdkConfiguration([
-        'strategy' => SdkConfiguration::STRATEGY_NONE,
-        'cookieSecret' => $this->cookieSecret
-    ]);
+    private static $mockSpyHeader;
 
-    $this->store = new CookieStore($this->configuration, $this->namespace);
-
-    $this->exampleKey = uniqid();
-});
-
-afterEach(function () {
-    $_COOKIE = [];
-});
-
-it('populates state from getState() override', function(array $state): void {
-    $this->store->getState([$this->exampleKey => $state]);
-
-    expect($this->store->get($this->exampleKey))->toEqual($state);
-})->with(['mocked state' => [
-    fn() => MockDataset::state()
-]]);
-
-it('populates state from $_COOKIE correctly', function(array $state): void {
-    $cookieNamespace = $this->store->getNamespace() . '_0';
-
-    $encrypted = MockCrypto::cookieCompatibleEncrypt($this->cookieSecret, [$this->exampleKey => $state]);
-
-    $_COOKIE[$cookieNamespace] = $encrypted;
-
-    $this->store->getState();
-
-    expect($this->store->get($this->exampleKey))->toEqual($state);
-})->with(['mocked state' => [
-    fn() => MockDataset::state()
-]]);
-
-it('populates state from a chunked $_COOKIE correctly', function(array $state): void {
-    $encrypted = MockCrypto::cookieCompatibleEncrypt($this->cookieSecret, [$this->exampleKey => $state]);
-    $chunks = str_split($encrypted, 32);
-
-    foreach($chunks as $index => $chunk) {
-        $_COOKIE[$this->store->getNamespace() . CookieStore::KEY_SEPARATOR . $index] = $chunk;
+    /**
+     * Run after each test in this suite.
+     */
+    public function tearDown(): void
+    {
+        $_COOKIE             = [];
+        self::$mockSpyCookie = null;
+        self::$mockSpyHeader = null;
     }
 
-    $this->store->getState();
+    /**
+     * @param array $args
+     *
+     * @return \PHPUnit\Framework\MockObject\MockObject|CookieStore
+     */
+    public function getMock(array $args = [])
+    {
+        $mockStore = $this->getMockBuilder(CookieStore::class)
+            ->setConstructorArgs([$args])
+            ->onlyMethods(['setCookie','setCookieHeader'])
+            ->getMock();
 
-    expect($this->store->get($this->exampleKey))->toEqual($state);
-})->with(['mocked state' => [
-    fn() => MockDataset::state()
-]]);
+        $mockStore->expects(self::$mockSpyCookie = $this->any())
+            ->method('setCookie')
+            ->willReturn(true);
 
-it('does not populate state from a malformed $_COOKIE', function(array $state): void {
-    $cookieNamespace = $this->store->getNamespace() . '_0';
+        $mockStore->expects(self::$mockSpyHeader = $this->any())
+            ->method('setCookieHeader');
 
-    $_COOKIE[$cookieNamespace] = [$this->exampleKey => $state];
+        return $mockStore;
+    }
 
-    $this->store->getState();
+    /**
+     * Gain access to PHPUnit's mock invocation stack for analyzing calls.
+     * PHPUnit 8.4 removed the native getInvocations property, requiring this workaround.
+     *
+     * @param object $mock
+     *
+     * @return array
+     */
+    public function getMockInvocations(object $mock)
+    {
+        $reflector = new ReflectionClass(get_class($mock));
+        $invocations = $reflector->getParentClass()->getProperty('invocations');
+        $invocations->setAccessible(true);
 
-    expect($this->store->get($this->exampleKey))->toBeNull();
-})->with(['mocked state' => [
-    fn() => MockDataset::state()
-]]);
+        return $invocations->getValue($mock);
+    }
 
-it('does not populate state from an unencrypted $_COOKIE', function(array $state): void {
-    $cookieNamespace = $this->store->getNamespace() . '_0';
+    public function testGetCookieName()
+    {
+        $store = new CookieStore();
+        $this->assertEquals('auth0__test_key', $store->getCookieName('test_key'));
+    }
 
-    $_COOKIE[$cookieNamespace] = json_encode([$this->exampleKey => $state]);
+    public function testCustomBaseName()
+    {
+        $store = new CookieStore(['base_name' => 'custom_base']);
+        $this->assertEquals('custom_base_test_key', $store->getCookieName('test_key'));
 
-    $this->store->getState();
+        $store = new CookieStore(['base_name' => 'custom_base_']);
+        $this->assertEquals('custom_base__test_key', $store->getCookieName('test_key'));
+    }
 
-    expect($this->store->get($this->exampleKey))->toBeNull();
-})->with(['mocked state' => [
-    fn() => MockDataset::state()
-]]);
+    public function testSetNoSameSite()
+    {
+        $mockStore = $this->getMock(['now' => 1, 'expiration' => 1]);
+        $mockStore->set('test_set_key', '__test_set_value__');
 
-test('set() updates state and $_COOKIE', function(array $states): void {
-    $cookieNamespace = $this->store->getNamespace() . '_0';
+        $this->assertEquals('__test_set_value__', $_COOKIE['auth0__test_set_key']);
+        $this->assertArrayNotHasKey('_auth0__test_set_key', $_COOKIE);
 
-    $this->store->getState([$this->exampleKey => $states[0]]);
-    $this->store->setState();
+        $this->assertCount(0, (array) $this->getMockInvocations(self::$mockSpyHeader));
+        $this->assertCount(1, (array) $this->getMockInvocations(self::$mockSpyCookie));
 
-    $this->assertNotEmpty($_COOKIE);
-    $this->assertNotNull($this->store->get($this->exampleKey));
-    $this->assertNotNull($_COOKIE[$cookieNamespace]);
+        $setCookieParams = $this->getMockInvocations(self::$mockSpyCookie)[0]->getParameters();
 
-    $previousCookieState = $_COOKIE[$cookieNamespace];
+        $this->assertEquals('auth0__test_set_key', $setCookieParams[0]);
+        $this->assertEquals('__test_set_value__', $setCookieParams[1]);
+        $this->assertEquals(2, $setCookieParams[2]);
+    }
 
-    $this->store->set($this->exampleKey, $states[1]);
+    public function testSetSameSiteNone()
+    {
+        $mockStore = $this->getMock(['now' => 10, 'expiration' => 10, 'samesite' => 'None']);
+        $mockStore->set('test_set_key', '__test_set_value__');
 
-    expect($this->store->get($this->exampleKey))->toEqual($states[1]);
-    $this->assertNotEquals($_COOKIE[$cookieNamespace], $previousCookieState);
-})->with(['mocked states' => [
-    fn() => [ MockDataset::state(), MockDataset::state() ]
-]]);
+        $this->assertEquals('__test_set_value__', $_COOKIE['auth0__test_set_key']);
+        $this->assertEquals('__test_set_value__', $_COOKIE['_auth0__test_set_key']);
 
-test('delete() updates state and $_COOKIE', function(array $state): void {
-    $cookieNamespace = $this->store->getNamespace() . '_0';
+        $this->assertCount(1, (array) $this->getMockInvocations(self::$mockSpyHeader));
 
-    $encrypted = MockCrypto::cookieCompatibleEncrypt($this->cookieSecret, [$this->exampleKey => $state]);
-    $_COOKIE[$cookieNamespace] = $encrypted;
+        $setHeaderParams = $this->getMockInvocations(self::$mockSpyHeader)[0]->getParameters();
 
-    $this->store->getState();
+        $this->assertEquals('auth0__test_set_key', $setHeaderParams[0]);
+        $this->assertEquals('__test_set_value__', $setHeaderParams[1]);
+        $this->assertEquals(20, $setHeaderParams[2]);
 
-    $previousCookieState = $_COOKIE[$cookieNamespace];
+        $this->assertCount(1, (array) $this->getMockInvocations(self::$mockSpyCookie));
 
-    // Force the state change. As we didn't use the class methods to mutate the session state, it won't be flagged as dirty internally.
-    $this->store->setState(true);
+        $setCookieParams = $this->getMockInvocations(self::$mockSpyCookie)[0]->getParameters();
 
-    $this->assertNotEquals($_COOKIE[$cookieNamespace], $previousCookieState);
+        $this->assertEquals('_auth0__test_set_key', $setCookieParams[0]);
+        $this->assertEquals('__test_set_value__', $setCookieParams[1]);
+        $this->assertEquals(20, $setCookieParams[2]);
+    }
 
-    $this->store->delete($this->exampleKey);
+    public function testSetSameSiteNoneNoLegacy()
+    {
+        $mockStore = $this->getMock(['legacy_samesite_none' => false, 'samesite' => 'None']);
+        $mockStore->set('test_set_key', '__test_set_value__');
 
-    expect($_COOKIE[$cookieNamespace] ?? null)->toBeNull();
-    expect($this->store->get($this->exampleKey))->toBeNull();
-})->with(['mocked state' => [
-    fn() => MockDataset::state()
-]]);
+        $this->assertEquals('__test_set_value__', $_COOKIE['auth0__test_set_key']);
+        $this->assertArrayNotHasKey('_auth0__test_set_key', $_COOKIE);
+        $this->assertCount(0, (array) $this->getMockInvocations(self::$mockSpyCookie));
+        $this->assertCount(1, (array) $this->getMockInvocations(self::$mockSpyHeader));
 
-test('purge() clears state and $_COOKIE', function(array $state): void {
-    $cookieNamespace = $this->store->getNamespace() . '_0';
+        $setCookieParams = $this->getMockInvocations(self::$mockSpyHeader)[0]->getParameters();
 
-    $encrypted = MockCrypto::cookieCompatibleEncrypt($this->cookieSecret, [$this->exampleKey => $state]);
-    $_COOKIE[$cookieNamespace] = $encrypted;
+        $this->assertEquals('auth0__test_set_key', $setCookieParams[0]);
+        $this->assertEquals('__test_set_value__', $setCookieParams[1]);
+        $this->assertGreaterThanOrEqual(time() + 600, $setCookieParams[2]);
+    }
 
-    $this->store->getState();
+    public function testGet()
+    {
+        $store = new CookieStore();
 
-    $this->assertNotEmpty($_COOKIE);
-    $this->assertNotNull($this->store->get($this->exampleKey));
-    $this->assertNotNull($_COOKIE[$cookieNamespace]);
+        $_COOKIE['auth0__test_get_key']  = '__test_get_value__';
+        $_COOKIE['_auth0__test_get_key'] = '__test_get_legacy_value__';
 
-    $this->store->purge();
+        $this->assertEquals('__test_get_value__', $store->get('test_get_key'));
+        $this->assertEquals('__test_default_value__', $store->get('test_empty_key', '__test_default_value__'));
 
-    expect($_COOKIE[$cookieNamespace] ?? null)->toBeNull();
-    expect($_COOKIE)->toBeEmpty();
-    expect($this->store->getState())->toBeEmpty();
-})->with(['mocked state' => [
-    fn() => MockDataset::state()
-]]);
+        unset($_COOKIE['auth0__test_get_key']);
+        $this->assertEquals('__test_get_legacy_value__', $store->get('test_get_key'));
+    }
 
-test('encrypt() throws an exception if a cookie secret is not configured', function(): void {
-    $this->configuration = new SdkConfiguration([
-        'strategy' => SdkConfiguration::STRATEGY_NONE,
-    ]);
+    public function testGetNoLegacy()
+    {
+        $store = new CookieStore(['legacy_samesite_none' => false]);
 
-    $this->store = new CookieStore($this->configuration, $this->namespace);
+        $_COOKIE['auth0__test_get_key']  = '__test_get_value__';
+        $_COOKIE['_auth0__test_get_key'] = '__test_get_legacy_value__';
 
-    $this->store->set('testing', 'this should throw an error');
-})->throws(\Auth0\SDK\Exception\ConfigurationException::class, \Auth0\SDK\Exception\ConfigurationException::MSG_REQUIRES_COOKIE_SECRET);
+        $this->assertEquals('__test_get_value__', $store->get('test_get_key'));
+        $this->assertEquals('__test_default_value__', $store->get('test_empty_key', '__test_default_value__'));
 
-test('decrypt() throws an exception if a cookie secret is not configured', function(array $state): void {
-    $this->configuration = new SdkConfiguration([
-        'strategy' => SdkConfiguration::STRATEGY_NONE,
-    ]);
+        unset($_COOKIE['auth0__test_get_key']);
+        $this->assertNull($store->get('test_get_key'));
+    }
 
-    $this->store = new CookieStore($this->configuration, $this->namespace);
+    public function testDelete()
+    {
+        $_COOKIE['auth0__test_delete_key']  = '__test_delete_value__';
+        $_COOKIE['_auth0__test_delete_key'] = '__test_delete_value__';
 
-    $cookieNamespace = $this->store->getNamespace() . '_0';
-    $encrypted = MockCrypto::cookieCompatibleEncrypt($this->cookieSecret, [$this->exampleKey => $state]);
-    $_COOKIE[$cookieNamespace] = $encrypted;
+        $mockStore = $this->getMock();
+        $mockStore->delete('test_delete_key');
 
-    $this->store->getState();
-})->with(['mocked state' => [
-    fn() => MockDataset::state()
-]])->throws(\Auth0\SDK\Exception\ConfigurationException::class, \Auth0\SDK\Exception\ConfigurationException::MSG_REQUIRES_COOKIE_SECRET);
+        $this->assertNull($mockStore->get('test_delete_key'));
+        $this->assertArrayNotHasKey('auth0__test_delete_key', $_COOKIE);
+        $this->assertArrayNotHasKey('_auth0__test_delete_key', $_COOKIE);
 
-test('decrypt() returns null if malformed JSON is encoded', function(): void {
-    $cookieNamespace = $this->store->getNamespace() . '_0';
-    $_COOKIE[$cookieNamespace] = 'nonsense';
+        $this->assertCount(0, (array) $this->getMockInvocations(self::$mockSpyHeader));
+        $this->assertCount(2, (array) $this->getMockInvocations(self::$mockSpyCookie));
 
-    expect($this->store->getState())->toBeEmpty();
-});
+        $setCookieParams = $this->getMockInvocations(self::$mockSpyCookie)[0]->getParameters();
 
-test('decrypt() returns null if a malformed cryptographic manifest is encoded', function(): void {
-    $cookieNamespace = $this->store->getNamespace() . '_0';
-    $_COOKIE[$cookieNamespace] = json_encode([
-        'tag' => uniqid()
-    ]);
+        $this->assertEquals('auth0__test_delete_key', $setCookieParams[0]);
+        $this->assertEquals('', $setCookieParams[1]);
+        $this->assertEquals(0, $setCookieParams[2]);
 
-    expect($this->store->getState())->toBeEmpty();
+        $setCookieParams = $this->getMockInvocations(self::$mockSpyCookie)[1]->getParameters();
 
-    $_COOKIE[$cookieNamespace] = json_encode([
-        'iv' => 'hi 👋 malformed cryptographic manifest here',
-        'tag' => (string) uniqid()
-    ]);
+        $this->assertEquals('_auth0__test_delete_key', $setCookieParams[0]);
+        $this->assertEquals('', $setCookieParams[1]);
+        $this->assertEquals(0, $setCookieParams[2]);
+    }
 
-    expect($this->store->getState())->toBeEmpty();
-});
+    public function testDeleteNoLegacy()
+    {
+        $_COOKIE['auth0__test_delete_key']  = '__test_delete_value__';
+        $_COOKIE['_auth0__test_delete_key'] = '__test_delete_value__';
 
-test('decrypt() returns null if a malformed data payload is encoded', function(): void {
-    $cookieNamespace = $this->store->getNamespace() . '_0';
+        $mockStore = $this->getMock(['legacy_samesite_none' => false]);
+        $mockStore->delete('test_delete_key');
 
-    $ivLength = openssl_cipher_iv_length(CookieStore::VAL_CRYPTO_ALGO);
-    $iv = openssl_random_pseudo_bytes($ivLength);
-    $payload = json_encode([
-        'tag' => base64_encode((string) uniqid()),
-        'iv' => base64_encode($iv),
-        'data' => 'not encrypted :eyes:'
-    ], JSON_THROW_ON_ERROR);
+        $this->assertNull($mockStore->get('test_delete_key'));
+        $this->assertArrayNotHasKey('auth0__test_delete_key', $_COOKIE);
+        $this->assertArrayHasKey('_auth0__test_delete_key', $_COOKIE);
 
-    $_COOKIE[$cookieNamespace] = $payload;
+        $this->assertCount(1, (array) $this->getMockInvocations(self::$mockSpyCookie));
 
-    expect($this->store->getState())->toBeEmpty();
-});
+        $setCookieParams = $this->getMockInvocations(self::$mockSpyCookie)[0]->getParameters();
 
-test('configured SameSite() is reflected', function(): void {
-    $this->configuration->setCookieSameSite('strict');
+        $this->assertEquals('auth0__test_delete_key', $setCookieParams[0]);
+        $this->assertEquals('', $setCookieParams[1]);
+        $this->assertEquals(0, $setCookieParams[2]);
+    }
 
-    $options = $this->store->getCookieOptions();
+    public function testGetSetCookieHeaderStrict()
+    {
+        $store  = new CookieStore(['now' => 303943620, 'expiration' => 0, 'samesite' => 'lax']);
+        $method = new \ReflectionMethod(CookieStore::class, 'getSameSiteCookieHeader');
+        $method->setAccessible(true);
+        $header = $method->invokeArgs($store, ['__test_name_1__', '__test_value_1__', 303943620]);
 
-    expect($options['samesite'])->toEqual('strict');
-});
+        $this->assertEquals(
+            'Set-Cookie: __test_name_1__=__test_value_1__; path=/; '.'expires=Sunday, 19-Aug-1979 20:47:00 GMT; HttpOnly; SameSite=Lax',
+            $header
+        );
+    }
 
-test('unsupported configured SameSite() is overwritten by default of `lax`', function(): void {
-    $this->configuration->setCookieSameSite('testing');
+    public function testGetSetCookieHeaderNone()
+    {
+        $store  = new CookieStore(['now' => 303943620, 'expiration' => 0, 'samesite' => 'none']);
+        $method = new \ReflectionMethod(CookieStore::class, 'getSameSiteCookieHeader');
+        $method->setAccessible(true);
+        $header = $method->invokeArgs($store, ['__test_name_2__', '__test_value_2__', 303943620]);
 
-    $options = $this->store->getCookieOptions();
+        $this->assertEquals(
+            'Set-Cookie: __test_name_2__=__test_value_2__; path=/; '.'expires=Sunday, 19-Aug-1979 20:47:00 GMT; HttpOnly; SameSite=None; Secure',
+            $header
+        );
+    }
 
-    expect($options['samesite'])->toEqual('Lax');
-});
+    public function testSetCookieHeaderFailsWithInvalidCookieName()
+    {
+        $store  = new CookieStore(['now' => 303943620, 'expiration' => 0, 'samesite' => 'none']);
+        $method = new \ReflectionMethod(CookieStore::class, 'getSameSiteCookieHeader');
+        $method->setAccessible(true);
+        $methodArgs = ['__test_invalid_name_;__', uniqid(), mt_rand(1000, 9999)];
 
-test('toggling encryption works', function(array $state): void {
-    expect($this->store->getEncrypted())->toEqual(true);
+        try {
+            $method->invokeArgs($store, $methodArgs);
+            $error_msg = 'No warning caught';
+        } catch (Warning $e) {
+            $error_msg = $e->getMessage();
+        }
 
-    $this->store->setEncrypted(false);
-    expect($this->store->getEncrypted())->toEqual(false);
+        $this->assertEquals("Cookie names cannot contain any of the following ',; \\t\\r\\n\\013\\014'", $error_msg);
 
-    $encrypted = $this->store->encrypt($state);
-    expect($encrypted)->toEqual(rawurlencode(json_encode($state)));
-    expect($this->store->decrypt($encrypted))->toEqual($state);
-    expect($this->store->decrypt(rawurlencode(json_encode('test'))))->toEqual([]);
-})->with(['mocked state' => [
-    fn() => MockDataset::state()
-]]);
+        $header = @$method->invokeArgs($store, $methodArgs);
+        $this->assertEquals('', $header);
+    }
 
-test('encrypt() returns nothing with invalid crypto properties', function(): void {
-    $state = MockDataset::state();
+    public function testSetCookieHeaderFailsWithInvalidCookieValue()
+    {
+        $store  = new CookieStore(['now' => 303943620, 'expiration' => 0, 'samesite' => 'none']);
+        $method = new \ReflectionMethod(CookieStore::class, 'getSameSiteCookieHeader');
+        $method->setAccessible(true);
+        $methodArgs = [uniqid(), '__test_invalid_value_;__', mt_rand(1000, 9999)];
 
-    expect($this->store->encrypt($state, ['ivLen' => false]))->toEqual('');
-    expect($this->store->encrypt($state, ['iv' => false]))->toEqual('');
-    expect($this->store->encrypt($state, ['tag' => false]))->toEqual('');
-    expect($this->store->encrypt($state, ['encrypted' => false]))->toEqual('');
-    expect($this->store->encrypt($state, ['encoded1' => false]))->toEqual('');
-    expect($this->store->encrypt($state, ['encoded2' => false]))->toEqual('');
+        try {
+            $method->invokeArgs($store, $methodArgs);
+            $error_msg = 'No warning caught';
+        } catch (Warning $e) {
+            $error_msg = $e->getMessage();
+        }
 
-    $this->store->setEncrypted(false);
-    expect($this->store->encrypt($state, ['encoded1' => false]))->toEqual('');
-});
+        $this->assertEquals("Cookie values cannot contain any of the following ',; \\t\\r\\n\\013\\014'", $error_msg);
+
+        $header = @$method->invokeArgs($store, $methodArgs);
+        $this->assertEquals('', $header);
+    }
+}

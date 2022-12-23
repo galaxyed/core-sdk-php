@@ -1,513 +1,598 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Auth0\SDK\API\Management;
 
-use Auth0\SDK\Contract\API\Management\OrganizationsInterface;
-use Auth0\SDK\Utility\Request\RequestOptions;
-use Auth0\SDK\Utility\Toolkit;
-use Psr\Http\Message\ResponseInterface;
+use GuzzleHttp\Exception\RequestException;
+use Auth0\SDK\Exception\EmptyOrInvalidParameterException;
 
 /**
  * Organizations
  * Handles requests to the Organizations endpoints of the v2 Management API.
  *
- * @see https://auth0.com/docs/api/management/v2#!/Organizations
+ * @package Auth0\SDK\API\Management
  */
-final class Organizations extends ManagementEndpoint implements OrganizationsInterface
+class Organizations extends GenericResource
 {
+
+    /**
+     * Create an organization.
+     * Required scope: "create:organizations"
+     *
+     * @param string                   $name        The name of the Organization. Cannot be changed later.
+     * @param string                   $displayName The displayed name of the Organization.
+     * @param null|array<string,mixed> $branding    An array containing branding customizations for the organization.
+     * @param null|array<string,mixed> $metadata    Optional. Additional metadata to store about the organization.
+     * @param array<string,mixed>      $params      Optional. Additional parameters to send with the API request.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
     public function create(
         string $name,
         string $displayName,
         ?array $branding = null,
         ?array $metadata = null,
-        ?array $body = null,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$name, $displayName] = Toolkit::filter([$name, $displayName])->string()->trim();
-        [$branding, $metadata, $body] = Toolkit::filter([$branding, $metadata, $body])->array()->trim();
-        [$branding, $metadata] = Toolkit::filter([$branding, $metadata])->array()->object();
+        array $params = []
+    )
+    {
+        $this->checkEmptyOrInvalidString($name, 'name');
+        $this->checkEmptyOrInvalidString($displayName, 'displayName');
 
-        Toolkit::assert([
-            [$name, \Auth0\SDK\Exception\ArgumentException::missing('name')],
-            [$displayName, \Auth0\SDK\Exception\ArgumentException::missing('displayName')],
-        ])->isString();
+        $payload = (object) array_filter([
+            'name'         => $name,
+            'display_name' => $displayName,
+            'branding'     => $branding ? (object) $branding : null,
+            'metadata'     => $metadata ? (object) $metadata : null,
+        ] + $params);
 
-        /** @var array<mixed> $body */
-
-        return $this->getHttpClient()->
-            method('post')->
-            addPath('organizations')->
-            withBody(
-                (object) Toolkit::merge([
-                    'name'         => $name,
-                    'display_name' => $displayName,
-                    'branding'     => $branding,
-                    'metadata'     => $metadata,
-                ], $body),
-            )->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('post')
+            ->addPath('organizations')
+            ->withBody(json_encode($payload))
+            ->call();
     }
 
-    public function getAll(
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('organizations')->
-            withOptions($options)->
-            call();
-    }
-
-    public function get(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('organizations', $id)->
-            withOptions($options)->
-            call();
-    }
-
-    public function getByName(
-        string $name,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$name] = Toolkit::filter([$name])->string()->trim();
-
-        Toolkit::assert([
-            [$name, \Auth0\SDK\Exception\ArgumentException::missing('name')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('organizations', 'name', $name)->
-            withOptions($options)->
-            call();
-    }
-
+    /**
+     * Update an organization.
+     * Required scope: "update:organizations"
+     *
+     * @param string                   $organization Organization (by ID) to update.
+     * @param string                   $displayName  The displayed name of the Organization.
+     * @param null|array<string,mixed> $branding     An array containing branding customizations for the organization.
+     * @param null|array<string,mixed> $metadata     Optional. Additional metadata to store about the organization.
+     * @param array<string,mixed>      $params       Optional. Additional parameters to send with the API request.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
     public function update(
-        string $id,
-        string $name,
+        string $organization,
         string $displayName,
         ?array $branding = null,
         ?array $metadata = null,
-        ?array $body = null,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id, $name, $displayName] = Toolkit::filter([$id, $name, $displayName])->string()->trim();
-        [$branding, $metadata, $body] = Toolkit::filter([$branding, $metadata, $body])->array()->trim();
-        [$branding, $metadata] = Toolkit::filter([$branding, $metadata])->array()->object();
+        array $params = []
+    )
+    {
+        $this->checkEmptyOrInvalidString($organization, 'organization');
+        $this->checkEmptyOrInvalidString($displayName, 'displayName');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-            [$displayName, \Auth0\SDK\Exception\ArgumentException::missing('displayName')],
-        ])->isString();
+        $payload = (object) array_filter([
+            'display_name' => $displayName,
+            'branding'     => $branding ? (object) $branding : null,
+            'metadata'     => $metadata ? (object) $metadata : null,
+        ] + $params);
 
-        /** @var array<mixed> $body */
-
-        return $this->getHttpClient()->
-            method('patch')->
-            addPath('organizations', $id)->
-            withBody(
-                (object) Toolkit::merge([
-                    'name'         => $name,
-                    'display_name' => $displayName,
-                    'branding'     => $branding,
-                    'metadata'     => $metadata,
-                ], $body),
-            )->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('patch')
+            ->addPath('organizations', $organization)
+            ->withBody(json_encode($payload))
+            ->call();
     }
 
+    /**
+     * Delete an organization.
+     * Required scope: "delete:organizations"
+     *
+     * @param string $organization Organization (by ID) to delete.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
     public function delete(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+        string $organization
+    )
+    {
+        $this->checkEmptyOrInvalidString($organization, 'organization');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('delete')->
-            addPath('organizations', $id)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('delete')
+            ->addPath('organizations', $organization)
+            ->call();
     }
 
-    public function addEnabledConnection(
-        string $id,
-        string $connectionId,
-        array $body,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id, $connectionId] = Toolkit::filter([$id, $connectionId])->string()->trim();
-        [$body] = Toolkit::filter([$body])->array()->trim();
-
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-            [$connectionId, \Auth0\SDK\Exception\ArgumentException::missing('connectionId')],
-        ])->isString();
-
-        Toolkit::assert([
-            [$body, \Auth0\SDK\Exception\ArgumentException::missing('body')],
-        ])->isArray();
-
-        /** @var array<mixed> $body */
-
-        return $this->getHttpClient()->
-            method('post')->
-            addPath('organizations', $id, 'enabled_connections')->
-            withBody(
-                (object) Toolkit::merge([
-                    'connection_id' => $connectionId,
-                ], $body),
-            )->
-            withOptions($options)->
-            call();
+    /**
+     * List all organizations.
+     * Required scope: "read:organizations"
+     *
+     * @param array<string,mixed> $params Optional. Options to include with the request, such as pagination or filtering parameters.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
+    public function getAll(
+        array $params = []
+    )
+    {
+        return $this->apiClient->method('get')
+            ->addPath('organizations')
+            ->withDictParams($this->normalizeRequest($params))
+            ->call();
     }
 
+    /**
+     * Get details about an organization, queried by it's ID.
+     * Required scope: "read:organizations"
+     *
+     * @param string $organization Organization (by ID) to retrieve details for.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
+    public function get(
+        string $organization
+    )
+    {
+        $this->checkEmptyOrInvalidString($organization, 'organization');
+
+        return $this->apiClient->method('get')
+            ->addPath('organizations', $organization)
+            ->call();
+    }
+
+    /**
+     * Get details about an organization, queried by it's `name`.
+     * Required scope: "read:organizations"
+     *
+     * @param string $organizationName Organization (by name parameter provided during creation) to retrieve details for.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
+    public function getByName(
+        string $organizationName
+    )
+    {
+        $this->checkEmptyOrInvalidString($organizationName, 'organizationName');
+
+        return $this->apiClient->method('get')
+            ->addPath('organizations', 'name', $organizationName)
+            ->call();
+    }
+
+    /**
+     * List the enabled connections associated with an organization.
+     * Required scope: "read:organization_connections"
+     *
+     * @param string              $organization Organization (by ID) to list connections of.
+     * @param array<string,mixed> $params       Optional. Additional options to include with the request, such as pagination or filtering parameters.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
     public function getEnabledConnections(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+        string $organization,
+        array $params = []
+    )
+    {
+        $this->checkEmptyOrInvalidString($organization, 'organization');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('organizations', $id, 'enabled_connections')->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('get')
+            ->addPath('organizations', $organization, 'enabled_connections')
+            ->withDictParams($this->normalizeRequest($params))
+            ->call();
     }
 
+    /**
+     * Get a connection (by ID) associated with an organization.
+     * Required scope: "read:organization_connections"
+     *
+     * @param string $organization Organization (by ID) that the connection is associated with.
+     * @param string $connection   Connection (by ID) to retrieve details for.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
     public function getEnabledConnection(
-        string $id,
-        string $connectionId,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id, $connectionId] = Toolkit::filter([$id, $connectionId])->string()->trim();
+        string $organization,
+        string $connection
+    )
+    {
+        $this->checkEmptyOrInvalidString($organization, 'organization');
+        $this->checkEmptyOrInvalidString($connection, 'connection');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-            [$connectionId, \Auth0\SDK\Exception\ArgumentException::missing('connectionId')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('organizations', $id, 'enabled_connections', $connectionId)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('get')
+            ->addPath('organizations', $organization, 'enabled_connections', $connection)
+            ->call();
     }
 
+    /**
+     * Add a connection to an organization.
+     * Required scope: "create:organization_connections"
+     *
+     * @param string              $organization Organization (by ID) to add a connection to.
+     * @param string              $connection   Connection (by ID) to add to organization.
+     * @param array<string,mixed> $params       Optional. Additional parameters to send with the API request.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
+    public function addEnabledConnection(
+        string $organization,
+        string $connection,
+        array $params = []
+    )
+    {
+        $this->checkEmptyOrInvalidString($organization, 'organization');
+        $this->checkEmptyOrInvalidString($connection, 'connection');
+
+        $payload = (object) array_filter([
+            'connection_id' => $connection
+        ] + $params);
+
+        return $this->apiClient->method('post')
+            ->addPath('organizations', $organization, 'enabled_connections')
+            ->withBody(json_encode($payload))
+            ->call();
+    }
+
+    /**
+     * Update a connection to an organization.
+     * Required scope: "update:organization_connections"
+     *
+     * @param string              $organization Organization (by ID) to add a connection to.
+     * @param string              $connection   Connection (by ID) to add to organization.
+     * @param array<string,mixed> $params       Optional. Additional parameters to send with the API request.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
     public function updateEnabledConnection(
-        string $id,
-        string $connectionId,
-        array $body,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id, $connectionId] = Toolkit::filter([$id, $connectionId])->string()->trim();
-        [$body] = Toolkit::filter([$body])->array()->trim();
+        string $organization,
+        string $connection,
+        array $params = []
+    )
+    {
+        $this->checkEmptyOrInvalidString($organization, 'organization');
+        $this->checkEmptyOrInvalidString($connection, 'connection');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-            [$connectionId, \Auth0\SDK\Exception\ArgumentException::missing('connectionId')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('patch')->
-            addPath('organizations', $id, 'enabled_connections', $connectionId)->
-            withBody((object) $body)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('patch')
+            ->addPath('organizations', $organization, 'enabled_connections', $connection)
+            ->withBody(json_encode( (object) $params))
+            ->call();
     }
 
+    /**
+     * Remove a connection from an organization.
+     * Required scope: "delete:organization_connections"
+     *
+     * @param string $organization Organization (by ID) to remove connection from.
+     * @param string $connection   Connection (by ID) to remove from organization.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
     public function removeEnabledConnection(
-        string $id,
-        string $connectionId,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id, $connectionId] = Toolkit::filter([$id, $connectionId])->string()->trim();
+        string $organization,
+        string $connection
+    )
+    {
+        $this->checkEmptyOrInvalidString($organization, 'organization');
+        $this->checkEmptyOrInvalidString($connection, 'connection');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-            [$connectionId, \Auth0\SDK\Exception\ArgumentException::missing('connectionId')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('delete')->
-            addPath('organizations', $id, 'enabled_connections', $connectionId)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('delete')
+            ->addPath('organizations', $organization, 'enabled_connections', $connection)
+            ->call();
     }
 
-    public function addMembers(
-        string $id,
-        array $members,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-        [$members] = Toolkit::filter([$members])->array()->trim();
-
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        Toolkit::assert([
-            [$members, \Auth0\SDK\Exception\ArgumentException::missing('members')],
-        ])->isArray();
-
-        return $this->getHttpClient()->
-            method('post')->
-            addPath('organizations', $id, 'members')->
-            withBody(
-                (object) [
-                    'members' => $members,
-                ],
-            )->
-            withOptions($options)->
-            call();
-    }
-
+    /**
+     * List the members (users) belonging to an organization
+     * Required scope: "read:organization_members"
+     *
+     * @param string              $organization Organization (by ID) to list members of.
+     * @param array<string,mixed> $params       Optional. Additional options to include with the request, such as pagination or filtering parameters.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
     public function getMembers(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+        string $organization,
+        array $params = []
+    )
+    {
+        $this->checkEmptyOrInvalidString($organization, 'organization');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('organizations', $id, 'members')->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('get')
+            ->addPath('organizations', $organization, 'members')
+            ->withDictParams($this->normalizeRequest($params))
+            ->call();
     }
 
+    /**
+     * Add one or more users to an organization as members.
+     * Required scope: "update:organization_members"
+     *
+     * @param string $organization Organization (by ID) to add new members to.
+     * @param array  $users        One or more users (by ID) to add from the organization.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
+    public function addMembers(
+        string $organization,
+        array $users
+    )
+    {
+        $this->checkEmptyOrInvalidString($organization, 'organization');
+        $this->checkEmptyOrInvalidArray($users, 'users');
+
+        $payload = [
+            'members' => $users
+        ];
+
+        return $this->apiClient->method('post')
+            ->addPath('organizations', $organization, 'members')
+            ->withBody(json_encode($payload))
+            ->call();
+    }
+
+    /**
+     * Remove one or more members (users) from an organization.
+     * Required scope: "delete:organization_members"
+     *
+     * @param string $organization Organization (by ID) users belong to.
+     * @param array  $users        One or more users (by ID) to remove from the organization.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
     public function removeMembers(
-        string $id,
-        array $members,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-        [$members] = Toolkit::filter([$members])->array()->trim();
+        string $organization,
+        array $users
+    )
+    {
+        $this->checkEmptyOrInvalidString($organization, 'organization');
+        $this->checkEmptyOrInvalidArray($users, 'users');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        $payload = [
+            'members' => $users
+        ];
 
-        Toolkit::assert([
-            [$members, \Auth0\SDK\Exception\ArgumentException::missing('members')],
-        ])->isArray();
-
-        return $this->getHttpClient()->
-            method('delete')->
-            addPath('organizations', $id, 'members')->
-            withBody(
-                (object) [
-                    'members' => $members,
-                ],
-            )->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('delete')
+            ->addPath('organizations', $organization, 'members')
+            ->withBody(json_encode($payload))
+            ->call();
     }
 
-    public function addMemberRoles(
-        string $id,
-        string $userId,
-        array $roles,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id, $userId] = Toolkit::filter([$id, $userId])->string()->trim();
-        [$roles] = Toolkit::filter([$roles])->array()->trim();
-
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-            [$userId, \Auth0\SDK\Exception\ArgumentException::missing('userId')],
-        ])->isString();
-
-        Toolkit::assert([
-            [$roles, \Auth0\SDK\Exception\ArgumentException::missing('roles')],
-        ])->isArray();
-
-        return $this->getHttpClient()->
-            method('post')->
-            addPath('organizations', $id, 'members', $userId, 'roles')->
-            withBody(
-                (object) [
-                    'roles' => $roles,
-                ],
-            )->
-            withOptions($options)->
-            call();
-    }
-
+    /**
+     * List the roles a member (user) in an organization currently has.
+     * Required scope: "read:organization_member_roles"
+     *
+     * @param string              $organization Organization (by ID) user belongs to.
+     * @param string              $user         User (by ID) to add role to.
+     * @param array<string,mixed> $params       Optional. Additional options to include with the request, such as pagination or filtering parameters.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
     public function getMemberRoles(
-        string $id,
-        string $userId,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id, $userId] = Toolkit::filter([$id, $userId])->string()->trim();
+        string $organization,
+        string $user,
+        array $params = []
+    )
+    {
+        $this->checkEmptyOrInvalidString($organization, 'organization');
+        $this->checkEmptyOrInvalidString($user, 'user');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-            [$userId, \Auth0\SDK\Exception\ArgumentException::missing('userId')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('organizations', $id, 'members', $userId, 'roles')->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('get')
+            ->addPath('organizations', $organization, 'members', $user, 'roles')
+            ->withDictParams($this->normalizeRequest($params))
+            ->call();
     }
 
+    /**
+     * Add one or more roles to a member (user) in an organization.
+     * Required scope: "create:organization_member_roles"
+     *
+     * @param string        $organization Organization (by ID) user belongs to.
+     * @param string        $user         User (by ID) to add roles to.
+     * @param array<string> $roles        One or more roles (by ID) to add to the user.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
+    public function addMemberRoles(
+        string $organization,
+        string $user,
+        array $roles
+    )
+    {
+        $this->checkEmptyOrInvalidString($organization, 'organization');
+        $this->checkEmptyOrInvalidString($user, 'user');
+        $this->checkEmptyOrInvalidArray($roles, 'roles');
+
+        $payload = [
+            'roles' => $roles
+        ];
+
+        return $this->apiClient->method('post')
+            ->addPath('organizations', $organization, 'members', $user, 'roles')
+            ->withBody(json_encode($payload))
+            ->call();
+    }
+
+    /**
+     * Remove one or more roles from a member (user) in an organization.
+     * Required scope: "delete:organization_member_roles"
+     *
+     * @param string        $organization Organization (by ID) user belongs to.
+     * @param string        $user         User (by ID) to remove roles from.
+     * @param array<string> $roles        One or more roles (by ID) to remove from the user.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
     public function removeMemberRoles(
-        string $id,
-        string $userId,
-        array $roles,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id, $userId] = Toolkit::filter([$id, $userId])->string()->trim();
-        [$roles] = Toolkit::filter([$roles])->array()->trim();
+        string $organization,
+        string $user,
+        array $roles
+    )
+    {
+        $this->checkEmptyOrInvalidString($organization, 'organization');
+        $this->checkEmptyOrInvalidString($user, 'user');
+        $this->checkEmptyOrInvalidArray($roles, 'roles');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-            [$userId, \Auth0\SDK\Exception\ArgumentException::missing('userId')],
-        ])->isString();
+        $payload = [
+            'roles' => $roles
+        ];
 
-        Toolkit::assert([
-            [$roles, \Auth0\SDK\Exception\ArgumentException::missing('roles')],
-        ])->isArray();
-
-        return $this->getHttpClient()->
-            method('delete')->
-            addPath('organizations', $id, 'members', $userId, 'roles')->
-            withBody(
-                (object) [
-                    'roles' => $roles,
-                ],
-            )->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('delete')
+            ->addPath('organizations', $organization, 'members', $user, 'roles')
+            ->withBody(json_encode($payload))
+            ->call();
     }
 
+    /**
+     * List invitations for an organization
+     * Required scope: "read:organization_invitations"
+     *
+     * @param string              $organization Organization (by ID) to list invitations for.
+     * @param array<string,mixed> $params       Optional. Options to include with the request, such as pagination or filtering parameters.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
+    public function getInvitations(
+        string $organization,
+        array $params = []
+    )
+    {
+        $this->checkEmptyOrInvalidString($organization, 'organization');
+
+        return $this->apiClient->method('get')
+            ->addPath('organizations', $organization, 'invitations')
+            ->withDictParams($this->normalizeRequest($params))
+            ->call();
+    }
+
+    /**
+     * Get an invitation (by ID) for an organization
+     * Required scope: "read:organization_invitations"
+     *
+     * @param string $organization Organization (by ID) to request.
+     * @param string $invitation   Invitation (by ID) to request.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
+    public function getInvitation(
+        string $organization,
+        string $invitation
+    )
+    {
+        $this->checkEmptyOrInvalidString($organization, 'organization');
+        $this->checkEmptyOrInvalidString($invitation, 'invitation');
+
+        return $this->apiClient->method('get')
+            ->addPath('organizations', $organization, 'invitations', $invitation)
+            ->call();
+    }
+
+    /**
+     * Create an invitation for an organization
+     * Required scope: "create:organization_invitations"
+     *
+     * @param string              $organization Organization (by ID) to create the invitation for.
+     * @param string              $clientId     Client (by ID) to create the invitation for. This Client must be associated with the Organization.
+     * @param array<string,mixed> $inviter      An array containing information about the inviter. Requires a 'name' key minimally.
+     *                                          - 'name' Required. A name to identify who is sending the invitation.
+     * @param array<string,mixed> $invitee      An array containing information about the invitee. Requires an 'email' key.
+     *                                          - 'email' Required. An email address where the invitation should be sent.
+     * @param array<string,mixed> $params       Optional. Options to include with the request, such as pagination or filtering parameters.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
     public function createInvitation(
-        string $id,
+        string $organization,
         string $clientId,
         array $inviter,
         array $invitee,
-        ?array $body = null,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id, $clientId] = Toolkit::filter([$id, $clientId])->string()->trim();
-        [$inviter, $invitee, $body] = Toolkit::filter([$inviter, $invitee, $body])->array()->trim();
-
-        /** @var array{name?: string} $inviter */
-        /** @var array{email?: string} $invitee */
-
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-            [$clientId, \Auth0\SDK\Exception\ArgumentException::missing('clientId')],
-        ])->isString();
-
-        Toolkit::assert([
-            [$inviter, \Auth0\SDK\Exception\ArgumentException::missing('inviter')],
-            [$invitee, \Auth0\SDK\Exception\ArgumentException::missing('invitee')],
-        ])->isArray();
+        array $params = []
+    )
+    {
+        $this->checkEmptyOrInvalidString($organization, 'organization');
+        $this->checkEmptyOrInvalidString($clientId, 'clientId');
+        $this->checkEmptyOrInvalidArray($inviter, 'inviter');
+        $this->checkEmptyOrInvalidArray($invitee, 'invitee');
 
         if (! isset($inviter['name'])) {
-            throw \Auth0\SDK\Exception\ArgumentException::missing('inviter.name');
+            throw new EmptyOrInvalidParameterException('inviter');
         }
 
         if (! isset($invitee['email'])) {
-            throw \Auth0\SDK\Exception\ArgumentException::missing('invitee.email');
+            throw new EmptyOrInvalidParameterException('invitee');
         }
 
-        /** @var array<mixed> $body */
+        $payload = (object) array_filter([
+            'client_id' => $clientId,
+            'inviter'   => (object) $inviter,
+            'invitee'   => (object) $invitee,
+        ] + $params);
 
-        return $this->getHttpClient()->
-            method('post')->
-            addPath('organizations', $id, 'invitations')->
-            withBody(
-                (object) Toolkit::merge([
-                    'client_id' => $clientId,
-                    'inviter'   => (object) $inviter,
-                    'invitee'   => (object) $invitee,
-                ], $body),
-            )->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('post')
+            ->addPath('organizations', $organization, 'invitations')
+            ->withBody(json_encode($payload))
+            ->call();
     }
 
-    public function getInvitations(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('organizations', $id, 'invitations')->
-            withOptions($options)->
-            call();
-    }
-
-    public function getInvitation(
-        string $id,
-        string $invitationId,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id, $invitationId] = Toolkit::filter([$id, $invitationId])->string()->trim();
-
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-            [$invitationId, \Auth0\SDK\Exception\ArgumentException::missing('invitationId')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('organizations', $id, 'invitations', $invitationId)->
-            withOptions($options)->
-            call();
-    }
-
+    /**
+     * Delete an invitation (by ID) for an organization
+     * Required scope: "delete:organization_invitations"
+     *
+     * @param string $organization Organization (by ID) to request.
+     * @param string $invitation   Invitation (by ID) to request.
+     *
+     * @return mixed
+     *
+     * @throws RequestException When API request fails. Reason for failure provided in exception message.
+     */
     public function deleteInvitation(
-        string $id,
-        string $invitationId,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id, $invitationId] = Toolkit::filter([$id, $invitationId])->string()->trim();
+        string $organization,
+        string $invitation
+    )
+    {
+        $this->checkEmptyOrInvalidString($organization, 'organization');
+        $this->checkEmptyOrInvalidString($invitation, 'invitation');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-            [$invitationId, \Auth0\SDK\Exception\ArgumentException::missing('invitationId')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('delete')->
-            addPath('organizations', $id, 'invitations', $invitationId)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('delete')
+            ->addPath('organizations', $organization, 'invitations', $invitation)
+            ->call();
     }
 }

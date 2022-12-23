@@ -1,414 +1,528 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Auth0\SDK\API\Management;
 
-use Auth0\SDK\Contract\API\Management\UsersInterface;
-use Auth0\SDK\Utility\Request\RequestOptions;
-use Auth0\SDK\Utility\Toolkit;
-use Psr\Http\Message\ResponseInterface;
+use Auth0\SDK\Exception\EmptyOrInvalidParameterException;
+use Auth0\SDK\Exception\InvalidPermissionsArrayException;
 
 /**
  * Class Users.
  * Handles requests to the Users endpoint of the v2 Management API.
  *
- * @see https://auth0.com/docs/api/management/v2#!/Users
+ * @package Auth0\SDK\API\Management
  */
-final class Users extends ManagementEndpoint implements UsersInterface
+class Users extends GenericResource
 {
-    public function create(
-        string $connection,
-        array $body,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$connection] = Toolkit::filter([$connection])->string()->trim();
-        [$body] = Toolkit::filter([$body])->array()->trim();
-
-        Toolkit::assert([
-            [$connection, \Auth0\SDK\Exception\ArgumentException::missing('connection')],
-        ])->isString();
-
-        Toolkit::assert([
-            [$body, \Auth0\SDK\Exception\ArgumentException::missing('body')],
-        ])->isArray();
-
-        /** @var array<mixed> $body */
-
-        return $this->getHttpClient()->
-            method('post')->
-            addPath('users')->
-            withBody(
-                (object) Toolkit::merge([
-                    'connection' => $connection,
-                ], $body),
-            )->
-            withOptions($options)->
-            call();
+    /**
+     * Get a single User by ID.
+     * Required scopes:
+     *      - "read:users" - For any call to this endpoint.
+     *      - "read:user_idp_tokens" - To retrieve the "access_token" field for logged-in identities.
+     *
+     * @param string $user_id User ID to get.
+     *
+     * @return mixed
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     */
+    public function get($user_id)
+    {
+        return $this->apiClient->method('get')
+            ->addPath('users', $user_id)
+            ->call();
     }
 
-    public function getAll(
-        ?array $parameters = null,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$parameters] = Toolkit::filter([$parameters])->array()->trim();
-
-        /** @var array<int|string|null> $parameters */
-
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('users')->
-            withParams($parameters)->
-            withOptions($options)->
-            call();
+    /**
+     * Update a User.
+     * Required scopes:
+     *      - "update:users" - For any call to this endpoint.
+     *      - "update:users_app_metadata" - For any update that includes "user_metadata" or "app_metadata" fields.
+     *
+     * @param string $user_id User ID to update.
+     * @param array  $data    User data to update:
+     *          - Only certain fields can be updated; see the @link below for allowed fields.
+     *          - "user_metadata" and "app_metadata" fields are merged, not replaced.
+     *
+     * @return mixed|string
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Users/patch_users_by_id
+     */
+    public function update($user_id, array $data)
+    {
+        return $this->apiClient->method('patch')
+            ->addPath('users', $user_id)
+            ->withBody(json_encode($data))
+            ->call();
     }
 
-    public function get(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+    /**
+     * Create a new User.
+     * Required scope: "create:users"
+     *
+     * @param array $data User create data:
+     *      - "connection" name field is required and limited to sms, email, & DB connections.
+     *      - "phone_number" field is required by sms connections.
+     *      - "email" field is required by email and DB connections.
+     *      - "password" field is required by DB connections.
+     *      - Depending on the connection used, may also require a "username" field.
+     *
+     * @return mixed|string
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Users/post_users
+     */
+    public function create(array $data)
+    {
+        if (empty($data['connection'])) {
+            throw new \Exception('Missing required "connection" field.');
+        }
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        // A phone number is required for sms connections.
+        if ('sms' === $data['connection'] && empty($data['phone_number'])) {
+            throw new \Exception('Missing required "phone_number" field for sms connection.');
+        }
 
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('users', $id)->
-            withOptions($options)->
-            call();
+        // An email is required for email and DB connections.
+        if ('sms' !== $data['connection'] && empty($data['email'])) {
+            throw new \Exception('Missing required "email" field.');
+        }
+
+        // A password is required for DB connections.
+        if (! in_array( $data['connection'], [ 'email', 'sms' ] ) && empty($data['password'])) {
+            throw new \Exception('Missing required "password" field for "'.$data['connection'].'" connection.');
+        }
+
+        return $this->apiClient->method('post')
+            ->addPath('users')
+            ->withBody(json_encode($data))
+            ->call();
     }
 
-    public function update(
-        string $id,
-        array $body,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-        [$body] = Toolkit::filter([$body])->array()->trim();
+    /**
+     * Search all Users.
+     * Required scopes:
+     *      - "read:users" - For any call to this endpoint.
+     *      - "read:user_idp_tokens" - To retrieve the "access_token" field for logged-in identities.
+     *
+     * @param array             $params         Search parameters to send:
+     *      - "fields", "include_fields", "page", and "per_page" keys here will override the explicit parameters.
+     *      - Queries using "search_engine" set to "v2" should be migrated to v3; see search v3 @link below.
+     * @param null|string|array $fields         Fields to include or exclude from the result.
+     *      - Including only the fields required can speed up API calls significantly.
+     *      - Arrays will be converted to comma-separated strings.
+     * @param null|boolean      $include_fields True to include $fields, false to exclude $fields.
+     * @param null|integer      $page           Page number to get, zero-based.
+     * @param null|integer      $per_page       Number of results to get, null to return the default number.
+     *
+     * @return mixed
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/users/search/v3
+     * @link https://auth0.com/docs/api/management/v2#!/Users/get_users
+     */
+    public function getAll(array $params = [], $fields = null, $include_fields = null, $page = null, $per_page = null)
+    {
+        // Fields to include/exclude.
+        if (! isset($params['fields']) && null !== $fields) {
+            $params['fields'] = $fields;
+        }
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        if (isset($params['fields'])) {
+            if (is_array($params['fields'])) {
+                $params['fields'] = implode(',', $params['fields']);
+            }
 
-        Toolkit::assert([
-            [$body, \Auth0\SDK\Exception\ArgumentException::missing('body')],
-        ])->isArray();
+            if (! isset($params['include_fields']) && null !== $include_fields) {
+                $params['include_fields'] = (bool) $include_fields;
+            }
+        }
 
-        return $this->getHttpClient()->
-            method('patch')->
-            addPath('users', $id)->
-            withBody((object) $body)->
-            withOptions($options)->
-            call();
+        $params = $this->normalizePagination( $params, $page, $per_page );
+        $params = $this->normalizeIncludeTotals( $params );
+
+        return $this->apiClient->method('get')
+            ->addPath('users')
+            ->withDictParams($params)
+            ->call();
     }
 
-    public function delete(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('delete')->
-            addPath('users', $id)->
-            withOptions($options)->
-            call();
+    /**
+     * Delete a User by ID.
+     * Required scope: "delete:users"
+     *
+     * @param string $user_id User ID to delete.
+     *
+     * @return mixed|string
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Users/delete_users_by_id
+     */
+    public function delete($user_id)
+    {
+        return $this->apiClient->method('delete')
+            ->addPath('users', $user_id)
+            ->call();
     }
 
-    public function linkAccount(
-        string $id,
-        array $body,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-        [$body] = Toolkit::filter([$body])->array()->trim();
-
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        Toolkit::assert([
-            [$body, \Auth0\SDK\Exception\ArgumentException::missing('body')],
-        ])->isArray();
-
-        return $this->getHttpClient()->
-            method('post')->
-            addPath('users', $id, 'identities')->
-            withBody((object) $body)->
-            withOptions($options)->
-            call();
+    /**
+     * Link one user identity to another.
+     * Required scope: "update:users"
+     *
+     * @param string $user_id User ID of the primary account.
+     * @param array  $data    An array with the following fields:
+     *          - "provider" - Secondary account provider.
+     *          - "user_id" - Secondary account user ID.
+     *          - "connection_id" - Secondary account Connection ID (optional).
+     *
+     * @return array Array of the primary account identities after the merge.
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Users/post_identities
+     */
+    public function linkAccount($user_id, array $data)
+    {
+        return $this->apiClient->method('post')
+            ->addPath('users', $user_id, 'identities')
+            ->withBody(json_encode($data))
+            ->call();
     }
 
-    public function unlinkAccount(
-        string $id,
-        string $provider,
-        string $identityId,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id, $provider, $identityId] = Toolkit::filter([$id, $provider, $identityId])->string()->trim();
-
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-            [$provider, \Auth0\SDK\Exception\ArgumentException::missing('provider')],
-            [$identityId, \Auth0\SDK\Exception\ArgumentException::missing('identityId')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('delete')->
-            addPath('users', $id, 'identities', $provider, $identityId)->
-            withOptions($options)->
-            call();
+    /**
+     * Unlink an identity from the target user.
+     * Required scope: "update:users"
+     *
+     * @param string $user_id     User ID to unlink.
+     * @param string $provider    Identity provider of the secondary linked account.
+     * @param string $identity_id The unique identifier of the secondary linked account.
+     *
+     * @return mixed|string
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Users/delete_user_identity_by_user_id
+     */
+    public function unlinkAccount($user_id, $provider, $identity_id)
+    {
+        return $this->apiClient->method('delete')
+            ->addPath('users', $user_id, 'identities', $provider, $identity_id)
+            ->call();
     }
 
-    public function addRoles(
-        string $id,
-        array $roles,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-        [$roles] = Toolkit::filter([$roles])->array()->trim();
-
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        Toolkit::assert([
-            [$roles, \Auth0\SDK\Exception\ArgumentException::missing('roles')],
-        ])->isArray();
-
-        return $this->getHttpClient()->
-            method('post')->
-            addPath('users', $id, 'roles')->
-            withBody(
-                (object) [
-                    'roles' => $roles,
-                ],
-            )->
-            withOptions($options)->
-            call();
+    /**
+     * Delete the multifactor provider settings for a particular user.
+     * This will force user to re-configure the multifactor provider.
+     * Required scope: "update:users"
+     *
+     * @param string $user_id      User ID with the multifactor provider to delete.
+     * @param string $mfa_provider Multifactor provider to delete.
+     *
+     * @return mixed|string
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Users/delete_multifactor_by_provider
+     */
+    public function deleteMultifactorProvider($user_id, $mfa_provider)
+    {
+        return $this->apiClient->method('delete')
+            ->addPath('users', $user_id, 'multifactor', $mfa_provider)
+            ->call();
     }
 
-    public function getRoles(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+    /**
+     * Get all roles assigned to a specific user.
+     * Required scopes:
+     *      - "read:users"
+     *      - "read:roles"
+     *
+     * @param string $user_id User ID to get roles for.
+     * @param array  $params  Additional listing params like page, per_page, and include_totals.
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the user_id parameter is empty or is not a string.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @return mixed
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Users/get_user_roles
+     */
+    public function getRoles($user_id, array $params = [])
+    {
+        $this->checkEmptyOrInvalidString($user_id, 'user_id');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        $params = $this->normalizePagination( $params );
+        $params = $this->normalizeIncludeTotals( $params );
 
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('users', $id, 'roles')->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('get')
+            ->addPath('users', $user_id, 'roles')
+            ->withDictParams($params)
+            ->call();
     }
 
-    public function removeRoles(
-        string $id,
-        array $roles,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-        [$roles] = Toolkit::filter([$roles])->array()->trim();
+    /**
+     * Remove one or more roles from a specific user.
+     * Required scope: "update:users"
+     *
+     * @param string $user_id User ID to remove roles from.
+     * @param array  $roles   Array of permissions to remove.
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the user_id parameter is empty or is not a string.
+     * @throws EmptyOrInvalidParameterException Thrown if the roles parameter is empty.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @return mixed
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Users/delete_user_roles
+     */
+    public function removeRoles($user_id, array $roles)
+    {
+        $this->checkEmptyOrInvalidString($user_id, 'user_id');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        if (empty($roles)) {
+            throw new EmptyOrInvalidParameterException('roles');
+        }
 
-        Toolkit::assert([
-            [$roles, \Auth0\SDK\Exception\ArgumentException::missing('roles')],
-        ])->isArray();
+        $data = [ 'roles' => $roles ];
 
-        return $this->getHttpClient()->
-            method('delete')->
-            addPath('users', $id, 'roles')->
-            withBody(
-                (object) [
-                    'roles' => $roles,
-                ],
-            )->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('delete')
+            ->addPath('users', $user_id, 'roles')
+            ->withBody(json_encode($data))
+            ->call();
     }
 
-    public function addPermissions(
-        string $id,
-        array $permissions,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-        [$permissions] = Toolkit::filter([$permissions])->array()->trim();
+    /**
+     * Add one or more roles to a specific user.
+     * Required scopes:
+     *      - "update:users"
+     *      - "read:roles"
+     *
+     * @param string $user_id User ID to add roles to.
+     * @param array  $roles   Array of roles to add.
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the user_id parameter is empty or is not a string.
+     * @throws EmptyOrInvalidParameterException Thrown if the roles parameter is empty.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @return mixed
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Users/post_user_roles
+     */
+    public function addRoles($user_id, array $roles)
+    {
+        $this->checkEmptyOrInvalidString($user_id, 'user_id');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        if (empty($roles)) {
+            throw new EmptyOrInvalidParameterException('roles');
+        }
 
-        Toolkit::assert([
-            [$permissions, \Auth0\SDK\Exception\ArgumentException::missing('permissions')],
-        ])->isPermissions();
+        $data = [ 'roles' => $roles ];
 
-        [$permissions] = Toolkit::filter([$permissions])->array()->permissions();
-
-        return $this->getHttpClient()->
-            method('post')->
-            addPath('users', $id, 'permissions')->
-            withBody($permissions)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('post')
+            ->addPath('users', $user_id, 'roles')
+            ->withBody(json_encode($data))
+            ->call();
     }
 
-    public function getPermissions(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+    /**
+     * Get all Guardian enrollments for a specific user.
+     * Required scope: "read:users"
+     *
+     * @param string $user_id User ID to get enrollments for.
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the user_id parameter is empty or is not a string.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @return mixed
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Users/get_enrollments
+     */
+    public function getEnrollments($user_id)
+    {
+        $this->checkEmptyOrInvalidString($user_id, 'user_id');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('users', $id, 'permissions')->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('get')
+            ->addPath('users', $user_id, 'enrollments')
+            ->call();
     }
 
-    public function removePermissions(
-        string $id,
-        array $permissions,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-        [$permissions] = Toolkit::filter([$permissions])->array()->trim();
+    /**
+     * Get all permissions for a specific user.
+     * Required scope: "read:users"
+     *
+     * @param string $user_id User ID to get permissions for.
+     * @param array  $params  Additional listing params like page, per_page, and include_totals.
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the user_id parameter is empty or is not a string.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @return mixed
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Users/get_permissions
+     */
+    public function getPermissions($user_id, array $params = [])
+    {
+        $this->checkEmptyOrInvalidString($user_id, 'user_id');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        $params = $this->normalizePagination( $params );
+        $params = $this->normalizeIncludeTotals( $params );
 
-        Toolkit::assert([
-            [$permissions, \Auth0\SDK\Exception\ArgumentException::missing('permissions')],
-        ])->isPermissions();
-
-        [$permissions] = Toolkit::filter([$permissions])->array()->permissions();
-
-        return $this->getHttpClient()->
-            method('delete')->
-            addPath('users', $id, 'permissions')->
-            withBody($permissions)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('get')
+            ->addPath('users', $user_id, 'permissions')
+            ->withDictParams($params)
+            ->call();
     }
 
-    public function getLogs(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+    /**
+     * Remove one or more permissions from a specific user.
+     * Required scope: "update:users"
+     *
+     * @param string $user_id     User ID to remove permissions from.
+     * @param array  $permissions Array of permissions to remove.
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the user_id parameter is empty or is not a string.
+     * @throws InvalidPermissionsArrayException Thrown if the permissions parameter is malformed.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @return mixed
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Users/delete_permissions
+     */
+    public function removePermissions($user_id, array $permissions)
+    {
+        $this->checkEmptyOrInvalidString($user_id, 'user_id');
+        $this->checkInvalidPermissions( $permissions );
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        $data = [ 'permissions' => $permissions ];
 
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('users', $id, 'logs')->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('delete')
+            ->addPath('users', $user_id, 'permissions')
+            ->withBody(json_encode($data))
+            ->call();
     }
 
-    public function getOrganizations(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+    /**
+     * Add one or more permissions to a specific user.
+     * Required scope: "update:users"
+     *
+     * @param string $user_id     User ID to add permissions to.
+     * @param array  $permissions Array of permissions to add.
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the user_id parameter is empty or is not a string.
+     * @throws InvalidPermissionsArrayException Thrown if the permissions parameter is malformed.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @return mixed
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Users/post_permissions
+     */
+    public function addPermissions($user_id, array $permissions)
+    {
+        $this->checkEmptyOrInvalidString($user_id, 'user_id');
+        $this->checkInvalidPermissions( $permissions );
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        $data = [ 'permissions' => $permissions ];
 
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('users', $id, 'organizations')->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('post')
+            ->addPath('users', $user_id, 'permissions')
+            ->withBody(json_encode($data))
+            ->call();
     }
 
-    public function getEnrollments(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+    /**
+     * Get log entries for a specific user.
+     * Required scope: "read:logs"
+     *
+     * @param string $user_id User ID to get logs entries for.
+     * @param array  $params  Additional listing params like page, per_page, sort, and include_totals.
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the user_id parameter is empty or is not a string.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @return mixed
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Users/get_logs_by_user
+     */
+    public function getLogs($user_id, array $params = [])
+    {
+        $this->checkEmptyOrInvalidString($user_id, 'user_id');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        $params = $this->normalizePagination( $params );
+        $params = $this->normalizeIncludeTotals( $params );
 
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('users', $id, 'enrollments')->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('get')
+            ->addPath('users', $user_id, 'logs')
+            ->withDictParams($params)
+            ->call();
     }
 
-    public function createRecoveryCode(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+    /**
+     * Get organizations a specific user belongs to.
+     * Required scope: "read:organizations"
+     *
+     * @param string $user_id User ID to get organization entries for.
+     * @param array  $params  Additional listing params like page, per_page, sort, and include_totals.
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the user_id parameter is empty or is not a string.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @return mixed
+     */
+    public function getOrganizations($user_id, array $params = [])
+    {
+        $this->checkEmptyOrInvalidString($user_id, 'user_id');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('post')->
-            addPath('users', $id, 'recovery-code-regeneration')->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('get')
+            ->addPath('users', $user_id, 'organizations')
+            ->withDictParams($this->normalizeRequest($params))
+            ->call();
     }
 
-    public function invalidateBrowsers(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+    /**
+     * Removes the current Guardian recovery code and generates and returns a new one.
+     * Required scope: "update:users"
+     *
+     * @param string $user_id User ID to remove and generate recovery codes for.
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the user_id parameter is empty or is not a string.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @return mixed
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Users/post_recovery_code_regeneration
+     */
+    public function generateRecoveryCode($user_id)
+    {
+        $this->checkEmptyOrInvalidString($user_id, 'user_id');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('post')->
-            addPath('users', $id, 'multifactor', 'actions', 'invalidate-remember-browser')->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('post')
+            ->addPath('users', $user_id, 'recovery-code-regeneration')
+            ->call();
     }
 
-    public function deleteMultifactorProvider(
-        string $id,
-        string $provider,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id, $provider] = Toolkit::filter([$id, $provider])->string()->trim();
+    /**
+     * Invalidates all remembered browsers for all authentication factors for a specific user.
+     * Required scope: "update:users"
+     *
+     * @param string $user_id User ID to invalidate browsers for.
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the user_id parameter is empty or is not a string.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @return mixed
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Users/post_invalidate_remember_browser
+     */
+    public function invalidateBrowsers($user_id)
+    {
+        $this->checkEmptyOrInvalidString($user_id, 'user_id');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-            [$provider, \Auth0\SDK\Exception\ArgumentException::missing('provider')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('delete')->
-            addPath('users', $id, 'multifactor', $provider)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('post')
+            ->addPath('users', $user_id, 'multifactor', 'actions', 'invalidate-remember-browser')
+            ->call();
     }
 }

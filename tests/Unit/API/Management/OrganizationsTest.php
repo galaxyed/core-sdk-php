@@ -1,468 +1,828 @@
 <?php
 
-declare(strict_types=1);
-
-uses()->group('management', 'management.organizations');
-
-beforeEach(function(): void {
-    $this->endpoint = $this->api->mock()->organizations();
-});
-
-test('create() issues an appropriate request', function(): void {
-    $mock = (object) [
-        'id' => uniqid(),
-        'name' => uniqid(),
-        'branding' => [
-            'logo_url' => uniqid(),
-        ],
-        'metadata' => [
-            'test' => uniqid()
-        ],
-        'body' => [
-            'additional' => [
-                'testing' => uniqid()
-            ]
-        ]
-    ];
-
-    $this->endpoint->create($mock->id, $mock->name, $mock->branding, $mock->metadata, $mock->body);
-
-    expect($this->api->getRequestMethod())->toEqual('POST');
-    expect($this->api->getRequestUrl())->toEndWith('/api/v2/organizations');
-
-    $headers = $this->api->getRequestHeaders();
-    expect($headers['Content-Type'][0])->toEqual('application/json');
-
-    $body = $this->api->getRequestBody();
-
-    $this->assertArrayHasKey('name', $body);
-    expect($body['name'])->toEqual($mock->id);
-
-    $this->assertArrayHasKey('display_name', $body);
-    expect($body['display_name'])->toEqual($mock->name);
-
-    $this->assertArrayHasKey('branding', $body);
-    $this->assertArrayHasKey('logo_url', $body['branding']);
-    expect($body['branding']['logo_url'])->toEqual($mock->branding['logo_url']);
-
-    $this->assertArrayHasKey('metadata', $body);
-    $this->assertArrayHasKey('test', $body['metadata']);
-    expect($body['metadata']['test'])->toEqual($mock->metadata['test']);
-
-    $body = $this->api->getRequestBodyAsString();
-    expect($body)->toEqual(json_encode(array_merge(['name' => $mock->id, 'display_name' => $mock->name, 'branding' => $mock->branding, 'metadata' => $mock->metadata], $mock->body)));
-});
-
-test('create() throws an exception when an invalid `name` argument is used', function(): void {
-    $this->endpoint->create('', '');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'name'));
-
-test('create() throws an exception when an invalid `displayName` argument is used', function(): void {
-    $this->endpoint->create('test-organization', '');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'displayName'));
-
-test('update() issues an appropriate request', function(): void {
-    $mock = (object) [
-        'id' => uniqid(),
-        'name' => uniqid(),
-        'displayName' => uniqid(),
-        'branding' => [
-            'logo_url' => uniqid(),
-        ],
-        'metadata' => [
-            'test' => uniqid()
-        ],
-        'body' => [
-            'additional' => [
-                'testing' => uniqid()
-            ]
-        ]
-    ];
-
-    $this->endpoint->update($mock->id, $mock->name, $mock->displayName, $mock->branding, $mock->metadata, $mock->body);
+namespace Auth0\Tests\unit\API\Management;
+
+use Auth0\SDK\API\Helpers\InformationHeaders;
+use Auth0\SDK\Exception\EmptyOrInvalidParameterException;
+use GuzzleHttp\Psr7\Response;
+use Auth0\Tests\API\ApiTests;
+
+/**
+* Class OrganizationsTest.
+* Tests the Auth0\SDK\API\Management\Organizations class.
+*
+* @group unit
+* @group management
+* @group organizations
+*
+* @package Auth0\Tests\integration\API\Management
+*/
+class OrganizationsTest extends ApiTests
+{
+    /**
+     * Expected telemetry value.
+     *
+     * @var string
+     */
+    protected static $expectedTelemetry;
+
+    /**
+     * Default request headers.
+     *
+     * @var array
+     */
+    protected static $headers = [ 'content-type' => 'json' ];
+
+    /**
+     * Runs before test suite starts.
+     */
+    public static function setUpBeforeClass(): void
+    {
+        $infoHeadersData = new InformationHeaders;
+        $infoHeadersData->setCorePackage();
+        self::$expectedTelemetry = $infoHeadersData->build();
+    }
+
+    public function testThatCreateOrganizationRequestIsFormedCorrectly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
+
+        $api->call()->organizations()->create(
+          'test-organization',
+          'Test Organization',
+          [
+            'logo_url' => 'https://test.com/test.png'
+          ],
+          [
+            'meta' => 'data'
+          ]
+        );
+
+        $this->assertEquals( 'POST', $api->getHistoryMethod() );
+        $this->assertEquals( 'https://api.test.local/api/v2/organizations', $api->getHistoryUrl() );
+
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+
+        $body = $api->getHistoryBody();
+
+        $this->assertArrayHasKey( 'name', $body );
+        $this->assertEquals( 'test-organization', $body['name'] );
+
+        $this->assertArrayHasKey( 'display_name', $body );
+        $this->assertEquals( 'Test Organization', $body['display_name'] );
+
+        $this->assertArrayHasKey( 'branding', $body );
+        $this->assertArrayHasKey( 'logo_url', $body['branding']);
+        $this->assertEquals( 'https://test.com/test.png', $body['branding']['logo_url'] );
+
+        $this->assertArrayHasKey( 'metadata', $body );
+        $this->assertArrayHasKey( 'meta', $body['metadata']);
+        $this->assertEquals( 'data', $body['metadata']['meta'] );
+    }
+
+    public function testThatCreateOrganizationRequestWithEmptyNameThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid name.');
+
+        $api->call()->organizations()->create( '', '' );
+    }
+
+    public function testThatCreateOrganizationRequestWithEmptyDisplayNameThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid displayName.');
+
+        $api->call()->organizations()->create( 'test-organization', '' );
+    }
 
-    expect($this->api->getRequestMethod())->toEqual('PATCH');
-    expect($this->api->getRequestUrl())->toEndWith('/api/v2/organizations/' . $mock->id);
-
-    $headers = $this->api->getRequestHeaders();
-    expect($headers['Content-Type'][0])->toEqual('application/json');
-
-    $body = $this->api->getRequestBody();
+    public function testThatUpdateOrganizationRequestIsFormedCorrectly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-    $this->assertArrayHasKey('name', $body);
-    expect($body['name'])->toEqual($mock->name);
+        $api->call()->organizations()->update(
+          'test-organization',
+          'Test Organization',
+          [
+            'logo_url' => 'https://test.com/test.png'
+          ],
+          [
+            'meta' => 'data'
+          ]
+        );
 
-    $this->assertArrayHasKey('display_name', $body);
-    expect($body['display_name'])->toEqual($mock->displayName);
+        $this->assertEquals( 'PATCH', $api->getHistoryMethod() );
+        $this->assertEquals( 'https://api.test.local/api/v2/organizations/test-organization', $api->getHistoryUrl() );
 
-    $this->assertArrayHasKey('branding', $body);
-    $this->assertArrayHasKey('logo_url', $body['branding']);
-    expect($body['branding']['logo_url'])->toEqual($mock->branding['logo_url']);
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
 
-    $this->assertArrayHasKey('metadata', $body);
-    $this->assertArrayHasKey('test', $body['metadata']);
-    expect($body['metadata']['test'])->toEqual($mock->metadata['test']);
+        $body = $api->getHistoryBody();
 
-    $body = $this->api->getRequestBodyAsString();
-    expect($body)->toEqual(json_encode(array_merge(['name' => $mock->name, 'display_name' => $mock->displayName, 'branding' => $mock->branding, 'metadata' => $mock->metadata], $mock->body)));
-});
+        $this->assertArrayHasKey( 'display_name', $body );
+        $this->assertEquals( 'Test Organization', $body['display_name'] );
 
-test('update() throws an exception when an invalid `id` is used', function(): void {
-    $this->endpoint->update('', '', '');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'id'));
+        $this->assertArrayHasKey( 'branding', $body );
+        $this->assertArrayHasKey( 'logo_url', $body['branding']);
+        $this->assertEquals( 'https://test.com/test.png', $body['branding']['logo_url'] );
 
-test('update() throws an exception when an invalid `displayName` is used', function(): void {
-    $this->endpoint->update('test-organization', '', '');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'displayName'));
+        $this->assertArrayHasKey( 'metadata', $body );
+        $this->assertArrayHasKey( 'meta', $body['metadata']);
+        $this->assertEquals( 'data', $body['metadata']['meta'] );
+    }
 
-test('delete() issues an appropriate request', function(): void {
-    $this->endpoint->delete('test-organization');
+    public function testThatUpdateOrganizationRequestWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
 
-    expect($this->api->getRequestMethod())->toEqual('DELETE');
-    expect($this->api->getRequestUrl())->toEndWith('/api/v2/organizations/test-organization');
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organization.');
 
-    $headers = $this->api->getRequestHeaders();
-    expect($headers['Content-Type'][0])->toEqual('application/json');
-});
+        $api->call()->organizations()->update('', '');
+    }
 
-test('delete() throws an exception when an invalid `id` is used', function(): void {
-    $this->endpoint->delete('');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'id'));
+    public function testThatUpdateOrganizationRequestWithEmptyDisplayNameThrowsException()
+    {
+        $api = new MockManagementApi();
 
-test('getAll() issues an appropriate request', function(): void {
-    $this->endpoint->getAll();
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid displayName.');
 
-    expect($this->api->getRequestMethod())->toEqual('GET');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/organizations');
-});
+        $api->call()->organizations()->update( 'test-organization', '' );
+    }
 
-test('get() issues an appropriate request', function(): void {
-    $this->endpoint->get('123');
+    public function testThatDeleteOrganizationRequestIsFormedCorrectly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-    expect($this->api->getRequestMethod())->toEqual('GET');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/organizations/123');
-});
+        $api->call()->organizations()->delete('test-organization');
 
-test('get() throws an exception when an invalid `id` is used', function(): void {
-    $this->endpoint->get('');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'id'));
+        $this->assertEquals( 'DELETE', $api->getHistoryMethod() );
+        $this->assertEquals( 'https://api.test.local/api/v2/organizations/test-organization', $api->getHistoryUrl() );
 
-test('getByName() issues an appropriate request', function(): void {
-    $this->endpoint->getByName('test-organization');
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
 
-    expect($this->api->getRequestMethod())->toEqual('GET');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/organizations/name/test-organization');
-});
+    public function testThatDeleteOrganizationRequestWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
 
-test('getByName() throws an exception when an invalid `name` is used', function(): void {
-    $this->endpoint->getByName('');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'name'));
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organization.');
 
-test('getEnabledConnections() issues an appropriate request', function(): void {
-    $this->endpoint->getEnabledConnections('test-organization');
+        $api->call()->organizations()->update('', '');
+    }
 
-    expect($this->api->getRequestMethod())->toEqual('GET');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/organizations/test-organization/enabled_connections');
-});
+    public function testThatGetAllRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-test('getEnabledConnections() throws an exception when an invalid `id` is used', function(): void {
-    $this->endpoint->getEnabledConnections('');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'id'));
+        $api->call()->organizations()->getAll();
 
-test('getEnabledConnection() issues an appropriate request', function(): void {
-    $this->endpoint->getEnabledConnection('test-organization', 'test-connection');
+        $this->assertEquals( 'GET', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/organizations', $api->getHistoryUrl() );
 
-    expect($this->api->getRequestMethod())->toEqual('GET');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/organizations/test-organization/enabled_connections/test-connection');
-});
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
 
-test('getEnabledConnection() throws an exception when an invalid `id` is used', function(): void {
-    $this->endpoint->getEnabledConnection('', '');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'id'));
+    public function testThatGetRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-test('getEnabledConnection() throws an exception when an invalid `connectionId` is used', function(): void {
-    $this->endpoint->getEnabledConnection('test-organization', '');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'connectionId'));
+        $api->call()->organizations()->get('123');
 
-test('addEnabledConnection() issues an appropriate request', function(): void {
-    $this->endpoint->addEnabledConnection('test-organization', 'test-connection', ['assign_membership_on_login' => true]);
+        $this->assertEquals( 'GET', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/organizations/123', $api->getHistoryUrl() );
 
-    expect($this->api->getRequestMethod())->toEqual('POST');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/organizations/test-organization/enabled_connections');
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
 
-    $body = $this->api->getRequestBody();
-    $this->assertArrayHasKey('connection_id', $body);
-    expect($body['connection_id'])->toEqual('test-connection');
+    public function testThatGetWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
 
-    $body = $this->api->getRequestBodyAsString();
-    expect($body)->toEqual(json_encode(['connection_id' => 'test-connection', 'assign_membership_on_login' => true]));
-});
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organization.');
 
-test('addEnabledConnection() throws an exception when an invalid `id` is used', function(): void {
-    $this->endpoint->addEnabledConnection('', '', ['assign_membership_on_login' => true]);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'id'));
+        $api->call()->organizations()->get( '' );
+    }
 
-test('addEnabledConnection() throws an exception when an invalid `connectionId` is used', function(): void {
-    $this->endpoint->addEnabledConnection('test-organization', '', ['assign_membership_on_login' => true]);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'connectionId'));
+    public function testThatGetByNameRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-test('updateEnabledConnection() issues an appropriate request', function(): void {
-    $this->endpoint->updateEnabledConnection('test-organization', 'test-connection', ['assign_membership_on_login' => true]);
+        $api->call()->organizations()->getByName('test-organization');
 
-    expect($this->api->getRequestMethod())->toEqual('PATCH');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/organizations/test-organization/enabled_connections/test-connection');
+        $this->assertEquals( 'GET', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/organizations/name/test-organization', $api->getHistoryUrl() );
 
-    $headers = $this->api->getRequestHeaders();
-    expect($headers['Content-Type'][0])->toEqual('application/json');
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
 
-    $body = $this->api->getRequestBody();
-    $this->assertArrayHasKey('assign_membership_on_login', $body);
-    expect($body['assign_membership_on_login'])->toBeTrue();
+    public function testThatGetByNameWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
 
-    $body = $this->api->getRequestBodyAsString();
-    expect($body)->toEqual(json_encode(['assign_membership_on_login' => true]));
-});
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organizationName.');
 
-test('updateEnabledConnection() throws an exception when an invalid `id` is used', function(): void {
-    $this->endpoint->updateEnabledConnection('', '', ['assign_membership_on_login' => true]);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'id'));
+        $api->call()->organizations()->getByName( '' );
+    }
 
-test('updateEnabledConnection() throws an exception when an invalid `connectionId` is used', function(): void {
-    $this->endpoint->updateEnabledConnection('test-organization', '', ['assign_membership_on_login' => true]);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'connectionId'));
+    public function testThatGetEnabledConnectionsRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-test('removeEnabledConnection() issues an appropriate request', function(): void {
-    $this->endpoint->removeEnabledConnection('test-organization', 'test-connection');
+        $api->call()->organizations()->getEnabledConnections('test-organization');
 
-    expect($this->api->getRequestMethod())->toEqual('DELETE');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/organizations/test-organization/enabled_connections/test-connection');
-});
+        $this->assertEquals( 'GET', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/organizations/test-organization/enabled_connections', $api->getHistoryUrl() );
 
-test('removeEnabledConnection() throws an exception when an invalid `id` is used', function(): void {
-    $this->endpoint->removeEnabledConnection('', '');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'id'));
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
 
-test('removeEnabledConnection() throws an exception when an invalid `connectionId` is used', function(): void {
-    $this->endpoint->removeEnabledConnection('test-organization', '');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'connectionId'));
+    public function testThatGetEnabledConnectionsWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
 
-test('getMembers() issues an appropriate request', function(): void {
-    $this->endpoint->getMembers('test-organization');
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organization.');
 
-    expect($this->api->getRequestMethod())->toEqual('GET');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/organizations/test-organization/members');
-});
+        $api->call()->organizations()->getEnabledConnections( '' );
+    }
 
-test('getMembers() throws an exception when an invalid `id` is used', function(): void {
-    $this->endpoint->getMembers('');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'id'));
+    public function testThatGetEnabledConnectionRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-test('addMembers() issues an appropriate request', function(): void {
-    $this->endpoint->addMembers('test-organization', ['test-user']);
+        $api->call()->organizations()->getEnabledConnection('test-organization', 'test-connection');
 
-    expect($this->api->getRequestMethod())->toEqual('POST');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/organizations/test-organization/members');
+        $this->assertEquals( 'GET', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/organizations/test-organization/enabled_connections/test-connection', $api->getHistoryUrl() );
 
-    $headers = $this->api->getRequestHeaders();
-    expect($headers['Content-Type'][0])->toEqual('application/json');
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
 
-    $body = $this->api->getRequestBody();
-    $this->assertArrayHasKey('members', $body);
-    expect($body['members'])->toContain('test-user');
+    public function testThatGetEnabledConnectionWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
 
-    $body = $this->api->getRequestBodyAsString();
-    expect($body)->toEqual(json_encode(['members' => ['test-user']]));
-});
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organization.');
 
-test('addMembers() throws an exception when an invalid `id` is used', function(): void {
-    $this->endpoint->addMembers('', []);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'id'));
+        $api->call()->organizations()->getEnabledConnection( '', '' );
+    }
 
-test('addMembers() throws an exception when an invalid `members` is used', function(): void {
-    $this->endpoint->addMembers('test-organization', []);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'members'));
+    public function testThatGetEnabledConnectionWithEmptyConnectionThrowsException()
+    {
+        $api = new MockManagementApi();
 
-test('removeMembers() issues an appropriate request', function(): void {
-    $this->endpoint->removeMembers('test-organization', ['test-user']);
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid connection.');
 
-    expect($this->api->getRequestMethod())->toEqual('DELETE');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/organizations/test-organization/members');
+        $api->call()->organizations()->getEnabledConnection( 'test-organization', '' );
+    }
 
-    $body = $this->api->getRequestBody();
-    $this->assertArrayHasKey('members', $body);
-    expect($body['members'])->toContain('test-user');
+    public function testThatAddEnabledConnectionRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-    $body = $this->api->getRequestBodyAsString();
-    expect($body)->toEqual(json_encode(['members' => ['test-user']]));
-});
+        $api->call()->organizations()->addEnabledConnection('test-organization', 'test-connection');
 
-test('removeMembers() throws an exception when an invalid `id` is used', function(): void {
-    $this->endpoint->removeMembers('', []);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'id'));
+        $this->assertEquals( 'POST', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/organizations/test-organization/enabled_connections', $api->getHistoryUrl() );
 
-test('removeMembers() throws an exception when an invalid `members` is used', function(): void {
-    $this->endpoint->removeMembers('test-organization', []);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'members'));
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
 
-test('getMemberRoles() issues an appropriate request', function(): void {
-    $this->endpoint->getMemberRoles('test-organization', 'test-user');
+        $body = $api->getHistoryBody();
+        $this->assertArrayHasKey( 'connection_id', $body );
+        $this->assertEquals( 'test-connection', $body['connection_id'] );
+    }
 
-    expect($this->api->getRequestMethod())->toEqual('GET');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/organizations/test-organization/members/test-user/roles');
-});
+    public function testThatAddEnabledConnectionWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
 
-test('getMemberRoles() throws an exception when an invalid `id` is used', function(): void {
-    $this->endpoint->getMemberRoles('', '');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'id'));
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organization.');
 
-test('getMemberRoles() throws an exception when an invalid `userId` is used', function(): void {
-    $this->endpoint->getMemberRoles('test-organization', '');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'userId'));
+        $api->call()->organizations()->addEnabledConnection( '', '' );
+    }
 
-test('addMemberRoles() issues an appropriate request', function(): void {
-    $this->endpoint->addMemberRoles('test-organization', 'test-user', ['test-role']);
+    public function testThatAddEnabledConnectionWithEmptyConnectionThrowsException()
+    {
+        $api = new MockManagementApi();
 
-    expect($this->api->getRequestMethod())->toEqual('POST');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/organizations/test-organization/members/test-user/roles');
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid connection.');
 
-    $headers = $this->api->getRequestHeaders();
-    expect($headers['Content-Type'][0])->toEqual('application/json');
+        $api->call()->organizations()->addEnabledConnection( 'test-organization', '' );
+    }
 
-    $body = $this->api->getRequestBody();
-    $this->assertArrayHasKey('roles', $body);
-    expect($body['roles'])->toContain('test-role');
+    public function testThatUpdateEnabledConnectionRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-    $body = $this->api->getRequestBodyAsString();
-    expect($body)->toEqual(json_encode(['roles' => ['test-role']]));
-});
+        $api->call()->organizations()->updateEnabledConnection('test-organization', 'test-connection', ['assign_membership_on_login' => true]);
 
-test('addMemberRoles() throws an exception when an invalid `id` is used', function(): void {
-    $this->endpoint->addMemberRoles('', '', []);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'id'));
+        $this->assertEquals( 'PATCH', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/organizations/test-organization/enabled_connections/test-connection', $api->getHistoryUrl() );
 
-test('addMemberRoles() throws an exception when an invalid `userId` is used', function(): void {
-    $this->endpoint->addMemberRoles('test-organization', '', []);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'userId'));
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
 
-test('addMemberRoles() throws an exception when an invalid `roles` is used', function(): void {
-    $this->endpoint->addMemberRoles('test-organization', 'test-rule', []);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'roles'));
+        $body = $api->getHistoryBody();
+        $this->assertArrayHasKey( 'assign_membership_on_login', $body );
+        $this->assertTrue( $body['assign_membership_on_login'] );
+    }
 
-test('removeMemberRoles() issues an appropriate request', function(): void {
-    $this->endpoint->removeMemberRoles('test-organization', 'test-user', ['test-role']);
+    public function testThatUpdateEnabledConnectionWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
 
-    expect($this->api->getRequestMethod())->toEqual('DELETE');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/organizations/test-organization/members/test-user/roles');
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organization.');
 
-    $body = $this->api->getRequestBody();
-    $this->assertArrayHasKey('roles', $body);
-    expect($body['roles'])->toContain('test-role');
+        $api->call()->organizations()->updateEnabledConnection( '', '' );
+    }
 
-    $body = $this->api->getRequestBodyAsString();
-    expect($body)->toEqual(json_encode(['roles' => ['test-role']]));
-});
+    public function testThatUpdateEnabledConnectionWithEmptyConnectionThrowsException()
+    {
+        $api = new MockManagementApi();
 
-test('removeMemberRoles() throws an exception when an invalid `id` is used', function(): void {
-    $this->endpoint->removeMemberRoles('', '', []);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'id'));
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid connection.');
 
-test('removeMemberRoles() throws an exception when an invalid `userId` is used', function(): void {
-    $this->endpoint->removeMemberRoles('test-organization', '', []);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'userId'));
+        $api->call()->organizations()->updateEnabledConnection( 'test-organization', '' );
+    }
 
-test('removeMemberRoles() throws an exception when an invalid `roles` is used', function(): void {
-    $this->endpoint->removeMemberRoles('test-organization', 'test-rule', []);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'roles'));
+    public function testThatRemoveEnabledConnectionRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-test('getInvitations() issues an appropriate request', function(): void {
-    $this->endpoint->getInvitations('test-organization');
+        $api->call()->organizations()->removeEnabledConnection('test-organization', 'test-connection');
 
-    expect($this->api->getRequestMethod())->toEqual('GET');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/organizations/test-organization/invitations');
-});
+        $this->assertEquals( 'DELETE', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/organizations/test-organization/enabled_connections/test-connection', $api->getHistoryUrl() );
 
-test('getInvitations() throws an exception when an invalid `id` is used', function(): void {
-    $this->endpoint->getInvitations('');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'id'));
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
 
-test('getInvitation() issues an appropriate request', function(): void {
-    $this->endpoint->getInvitation('test-organization', 'test-invitation');
+    public function testThatRemoveEnabledConnectionWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
 
-    expect($this->api->getRequestMethod())->toEqual('GET');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/organizations/test-organization/invitations/test-invitation');
-});
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organization.');
 
-test('getInvitation() throws an exception when an invalid `id` is used', function(): void {
-    $this->endpoint->getInvitation('', '');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'id'));
+        $api->call()->organizations()->removeEnabledConnection( '', '' );
+    }
 
-test('getInvitation() throws an exception when an invalid `invitationId` is used', function(): void {
-    $this->endpoint->getInvitation('test-organization', '');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'invitationId'));
+    public function testThatRemoveEnabledConnectionWithEmptyConnectionThrowsException()
+    {
+        $api = new MockManagementApi();
 
-test('createInvitation() issues an appropriate request', function(): void {
-    $this->endpoint->createInvitation(
-        'test-organization',
-        'test-client',
-        ['name' => 'Test Sender'],
-        ['email' => 'email@test.com']
-    );
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid connection.');
 
-    expect($this->api->getRequestMethod())->toEqual('POST');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/organizations/test-organization/invitations');
+        $api->call()->organizations()->removeEnabledConnection( 'test-organization', '' );
+    }
 
-    $headers = $this->api->getRequestHeaders();
-    expect($headers['Content-Type'][0])->toEqual('application/json');
+    public function testThatGetMembersRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-    $body = $this->api->getRequestBody();
-    $this->assertArrayHasKey('client_id', $body);
-    expect($body['client_id'])->toEqual('test-client');
-    $this->assertArrayHasKey('inviter', $body);
-    $this->assertArrayHasKey('name', $body['inviter']);
-    expect($body['inviter']['name'])->toEqual('Test Sender');
-    $this->assertArrayHasKey('invitee', $body);
-    $this->assertArrayHasKey('email', $body['invitee']);
-    expect($body['invitee']['email'])->toEqual('email@test.com');
+        $api->call()->organizations()->getMembers('test-organization');
 
-    $body = $this->api->getRequestBodyAsString();
-    expect($body)->toEqual(json_encode(['client_id' => 'test-client', 'inviter' => ['name' => 'Test Sender'], 'invitee' => ['email' => 'email@test.com']]));
-});
+        $this->assertEquals( 'GET', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/organizations/test-organization/members', $api->getHistoryUrl() );
 
-test('createInvitation() throws an exception when an invalid `id` is used', function(): void {
-    $this->endpoint->createInvitation('', '', [], []);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'id'));
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
 
-test('createInvitation() throws an exception when an invalid `clientId` is used', function(): void {
-    $this->endpoint->createInvitation('test-organization', '', [], []);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'clientId'));
+    public function testThatGetMembersWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
 
-test('createInvitation() throws an exception when an invalid `inviter` is used', function(): void {
-    $this->endpoint->createInvitation('test-organization', 'test-client', [], []);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'inviter'));
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organization.');
 
-test('createInvitation() throws an exception when an invalid `invitee` is used', function(): void {
-    $this->endpoint->createInvitation('test-organization', 'test-client', ['test' => 'test'], []);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'invitee'));
+        $api->call()->organizations()->getMembers( '' );
+    }
 
-test('createInvitation() throws an exception when an invalid `inviter.name` is used', function(): void {
-    $this->endpoint->createInvitation('test-organization', 'test-client', ['test' => 'test'], ['test' => 'test']);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'inviter.name'));
+    public function testThatAddMembersRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-test('createInvitation() throws an exception when an invalid `invitee.email` is used', function(): void {
-    $this->endpoint->createInvitation('test-organization', 'test-client', ['name' => 'Test Sender'], ['test' => 'test']);
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'invitee.email'));
+        $api->call()->organizations()->addMembers('test-organization', [ 'test-user' ]);
 
-test('deleteInvitation() issues an appropriate request', function(): void {
-    $this->endpoint->deleteInvitation('test-organization', 'test-invitation');
+        $this->assertEquals( 'POST', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/organizations/test-organization/members', $api->getHistoryUrl() );
 
-    expect($this->api->getRequestMethod())->toEqual('DELETE');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/organizations/test-organization/invitations/test-invitation');
-});
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
 
-test('deleteInvitation() throws an exception when an invalid `id` is used', function(): void {
-    $this->endpoint->deleteInvitation('', '');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'id'));
+        $body = $api->getHistoryBody();
+        $this->assertArrayHasKey( 'members', $body );
+        $this->assertContains('test-user', $body['members']);
+    }
 
-test('deleteInvitation() throws an exception when an invalid `invitationId` is used', function(): void {
-    $this->endpoint->deleteInvitation('test-organization', '');
-})->throws(\Auth0\SDK\Exception\ArgumentException::class, sprintf(\Auth0\SDK\Exception\ArgumentException::MSG_VALUE_CANNOT_BE_EMPTY, 'invitationId'));
+    public function testThatAddMembersWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organization.');
+
+        $api->call()->organizations()->addMembers( '', [] );
+    }
+
+    public function testThatAddMembersWithEmptyUsersThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid users.');
+
+        $api->call()->organizations()->addMembers( 'test-organization', [] );
+    }
+
+    public function testThatRemoveMembersRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
+
+        $api->call()->organizations()->removeMembers('test-organization', [ 'test-user']);
+
+        $this->assertEquals( 'DELETE', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/organizations/test-organization/members', $api->getHistoryUrl() );
+
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+
+        $body = $api->getHistoryBody();
+        $this->assertArrayHasKey( 'members', $body );
+        $this->assertContains('test-user', $body['members']);
+    }
+
+    public function testThatRemoveMembersWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organization.');
+
+        $api->call()->organizations()->removeMembers( '', [] );
+    }
+
+    public function testThatRemoveMembersWithEmptyUsersThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid users.');
+
+        $api->call()->organizations()->removeMembers( 'test-organization', [] );
+    }
+
+    public function testThatGetMemberRolesRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
+
+        $api->call()->organizations()->getMemberRoles('test-organization', 'test-user');
+
+        $this->assertEquals( 'GET', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/organizations/test-organization/members/test-user/roles', $api->getHistoryUrl() );
+
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
+
+    public function testThatGetMemberRolesWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organization.');
+
+        $api->call()->organizations()->getMemberRoles( '', '' );
+    }
+
+    public function testThatGetMemberRolesWithEmptyUserThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid user.');
+
+        $api->call()->organizations()->getMemberRoles( 'test-organization', '' );
+    }
+
+    public function testThatAddMemberRolesRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
+
+        $api->call()->organizations()->addMemberRoles('test-organization', 'test-user', [ 'test-role' ]);
+
+        $this->assertEquals( 'POST', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/organizations/test-organization/members/test-user/roles', $api->getHistoryUrl() );
+
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+
+        $body = $api->getHistoryBody();
+        $this->assertArrayHasKey( 'roles', $body );
+        $this->assertContains('test-role', $body['roles']);
+    }
+
+    public function testThatAddMemberRolesWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organization.');
+
+        $api->call()->organizations()->addMemberRoles( '', '', [] );
+    }
+
+    public function testThatAddMemberRolesWithEmptyUserThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid user.');
+
+        $api->call()->organizations()->addMemberRoles( 'test-organization', '', [] );
+    }
+
+    public function testThatAddMemberRolesWithEmptyRolesThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid roles.');
+
+        $api->call()->organizations()->addMemberRoles( 'test-organization', 'test-rule', [] );
+    }
+
+    public function testThatRemoveMemberRolesRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
+
+        $api->call()->organizations()->removeMemberRoles('test-organization', 'test-user', [ 'test-role' ]);
+
+        $this->assertEquals( 'DELETE', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/organizations/test-organization/members/test-user/roles', $api->getHistoryUrl() );
+
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+
+        $body = $api->getHistoryBody();
+        $this->assertArrayHasKey( 'roles', $body );
+        $this->assertContains('test-role', $body['roles']);
+    }
+
+    public function testThatRemoveMemberRolesWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organization.');
+
+        $api->call()->organizations()->removeMemberRoles( '', '', [] );
+    }
+
+    public function testThatRemoveMemberRolesWithEmptyUserThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid user.');
+
+        $api->call()->organizations()->removeMemberRoles( 'test-organization', '', [] );
+    }
+
+    public function testThatRemoveMemberRolesWithEmptyRolesThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid roles.');
+
+        $api->call()->organizations()->removeMemberRoles( 'test-organization', 'test-rule', [] );
+    }
+
+    public function testThatGetInvitationsRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
+
+        $api->call()->organizations()->getInvitations('test-organization');
+
+        $this->assertEquals( 'GET', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/organizations/test-organization/invitations', $api->getHistoryUrl() );
+
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
+
+    public function testThatGetInvitationsWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organization.');
+
+        $api->call()->organizations()->getInvitations( '' );
+    }
+
+    public function testThatGetInvitationRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
+
+        $api->call()->organizations()->getInvitation('test-organization', 'test-invitation');
+
+        $this->assertEquals( 'GET', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/organizations/test-organization/invitations/test-invitation', $api->getHistoryUrl() );
+
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
+
+    public function testThatGetInvitationWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organization.');
+
+        $api->call()->organizations()->getInvitation( '', '' );
+    }
+
+    public function testThatGetInvitationWithEmptyInvitationThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid invitation.');
+
+        $api->call()->organizations()->getInvitation( 'test-organization', '' );
+    }
+
+    public function testThatCreateInvitationRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
+
+        $api->call()->organizations()->createInvitation(
+          'test-organization',
+          'test-client',
+          [ 'name' => 'Test Sender' ],
+          [ 'email' => 'email@test.com' ]
+        );
+
+        $this->assertEquals( 'POST', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/organizations/test-organization/invitations', $api->getHistoryUrl() );
+
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+
+        $body = $api->getHistoryBody();
+        $this->assertArrayHasKey( 'client_id', $body );
+        $this->assertEquals('test-client', $body['client_id']);
+        $this->assertArrayHasKey( 'inviter', $body );
+        $this->assertArrayHasKey('name', $body['inviter']);
+        $this->assertEquals('Test Sender', $body['inviter']['name']);
+        $this->assertArrayHasKey( 'invitee', $body );
+        $this->assertArrayHasKey('email', $body['invitee']);
+        $this->assertEquals('email@test.com', $body['invitee']['email']);
+    }
+
+    public function testThatCreateInvitationWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organization.');
+
+        $api->call()->organizations()->createInvitation( '', '', [], [] );
+    }
+
+    public function testThatCreateInvitationWithEmptyClientThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid clientId.');
+
+        $api->call()->organizations()->createInvitation( 'test-organization', '', [], [] );
+    }
+
+    public function testThatCreateInvitationWithEmptyInviterThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid inviter.');
+
+        $api->call()->organizations()->createInvitation( 'test-organization', 'test-client', [], [] );
+    }
+
+    public function testThatCreateInvitationWithEmptyInviteeThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid invitee.');
+
+        $api->call()->organizations()->createInvitation( 'test-organization', 'test-client', [ 'test' => 'test' ], [] );
+    }
+
+    public function testThatCreateInvitationWithMalformedInviterThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid inviter.');
+
+        $api->call()->organizations()->createInvitation( 'test-organization', 'test-client', [ 'test' => 'test' ], [ 'test' => 'test' ] );
+    }
+
+    public function testThatCreateInvitationWithMalformedInviteeThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid invitee.');
+
+        $api->call()->organizations()->createInvitation( 'test-organization', 'test-client', [ 'name' => 'Test Sender' ], [ 'test' => 'test' ] );
+    }
+
+    public function testThatDeleteInvitationRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
+
+        $api->call()->organizations()->deleteInvitation('test-organization', 'test-invitation');
+
+        $this->assertEquals( 'DELETE', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/organizations/test-organization/invitations/test-invitation', $api->getHistoryUrl() );
+
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
+
+    public function testThatDeleteInvitationWithEmptyIdThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid organization.');
+
+        $api->call()->organizations()->deleteInvitation( '', '', );
+    }
+
+    public function testThatDeleteInvitationWithEmptyClientThrowsException()
+    {
+        $api = new MockManagementApi();
+
+        $this->expectException(EmptyOrInvalidParameterException::class);
+        $this->expectExceptionMessage('Empty or invalid invitation.');
+
+        $api->call()->organizations()->deleteInvitation( 'test-organization', '' );
+    }
+}

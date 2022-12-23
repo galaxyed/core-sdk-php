@@ -1,40 +1,79 @@
 <?php
+namespace Auth0\Tests\unit\API\Management;
 
-declare(strict_types=1);
+use Auth0\SDK\API\Helpers\InformationHeaders;
+use Auth0\SDK\API\Management;
+use Auth0\Tests\API\ApiTests;
+use GuzzleHttp\Psr7\Response;
 
-uses()->group('management', 'management.blacklists');
+class BlacklistsTest extends ApiTests
+{
 
-beforeEach(function(): void {
-    $this->endpoint = $this->api->mock()->blacklists();
-});
+    /**
+     * Expected telemetry value.
+     *
+     * @var string
+     */
+    protected static $expectedTelemetry;
 
-test('create() issues an appropriate request', function(): void {
-    $jti = uniqid();
-    $aud = uniqid();
+    /**
+     * Default request headers.
+     *
+     * @var array
+     */
+    protected static $headers = [ 'content-type' => 'json' ];
 
-    $this->endpoint->create($jti, $aud);
+    /**
+     * Runs before test suite starts.
+     */
+    public static function setUpBeforeClass(): void
+    {
+        $infoHeadersData = new InformationHeaders;
+        $infoHeadersData->setCorePackage();
+        self::$expectedTelemetry = $infoHeadersData->build();
+    }
 
-    expect($this->api->getRequestMethod())->toEqual('POST');
-    expect($this->api->getRequestUrl())->toEqual('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/blacklists/tokens');
-    expect($this->api->getRequestQuery())->toBeEmpty();
+    /**
+     * @throws \Exception Should not be thrown in this test.
+     */
+    public function testThatGetAllRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-    $body = $this->api->getRequestBody();
-    $this->assertArrayHasKey('aud', $body);
-    expect($body['aud'])->toEqual($aud);
-    $this->assertArrayHasKey('jti', $body);
-    expect($body['jti'])->toEqual($jti);
+        $api->call()->blacklists()->getAll( '__test_aud__' );
 
-    $body = $this->api->getRequestBodyAsString();
-    expect($body)->toEqual(json_encode(['jti' => $jti, 'aud' => $aud]));
-});
+        $this->assertEquals( 'GET', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/blacklists/tokens', $api->getHistoryUrl() );
 
-test('get() issues valid requests', function(): void {
-    $aud = uniqid();
+        $this->assertEquals( 'aud=__test_aud__', $api->getHistoryQuery() );
 
-    $this->endpoint->get($aud);
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
 
-    expect($this->api->getRequestMethod())->toEqual('GET');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/blacklists/tokens');
+    /**
+     * @throws \Exception Should not be thrown in this test.
+     */
+    public function testThatBlacklistRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-    expect($this->api->getRequestQuery(null))->toEqual('aud=' . $aud);
-});
+        $api->call()->blacklists()->blacklist( '__test_aud__', '__test_jti__' );
+
+        $this->assertEquals( 'POST', $api->getHistoryMethod() );
+        $this->assertEquals( 'https://api.test.local/api/v2/blacklists/tokens', $api->getHistoryUrl() );
+        $this->assertEmpty( $api->getHistoryQuery() );
+
+        $body = $api->getHistoryBody();
+        $this->assertArrayHasKey( 'aud', $body );
+        $this->assertEquals( '__test_aud__', $body['aud'] );
+        $this->assertArrayHasKey( 'jti', $body );
+        $this->assertEquals( '__test_jti__', $body['jti'] );
+
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
+    }
+}

@@ -1,233 +1,276 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Auth0\SDK\API\Management;
 
-use Auth0\SDK\Contract\API\Management\RolesInterface;
-use Auth0\SDK\Utility\Request\RequestOptions;
-use Auth0\SDK\Utility\Toolkit;
-use Psr\Http\Message\ResponseInterface;
+use Auth0\SDK\Exception\CoreException;
+use Auth0\SDK\Exception\EmptyOrInvalidParameterException;
+use Auth0\SDK\Exception\InvalidPermissionsArrayException;
 
 /**
  * Class Roles.
  * Handles requests to the Roles endpoint of the v2 Management API.
  *
- * @see https://auth0.com/docs/api/management/v2#!/Roles
+ * @package Auth0\SDK\API\Management
  */
-final class Roles extends ManagementEndpoint implements RolesInterface
+class Roles extends GenericResource
 {
-    public function create(
-        string $name,
-        ?array $body = null,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$name] = Toolkit::filter([$name])->string()->trim();
-        [$body] = Toolkit::filter([$body])->array()->trim();
+    /**
+     * Get all Roles
+     * Required scope: "read:roles"
+     *
+     * @param array $params Additional parameters to send with the request.
+     *
+     * @return mixed
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Roles/get_roles
+     */
+    public function getAll(array $params = [])
+    {
+        $params = $this->normalizePagination( $params );
+        $params = $this->normalizeIncludeTotals( $params );
 
-        /** @var array<mixed> $body */
-
-        Toolkit::assert([
-            [$name, \Auth0\SDK\Exception\ArgumentException::missing('name')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('post')->
-            addPath('roles')->
-            withBody(
-                (object) Toolkit::merge([
-                    'name' => $name,
-                ], $body),
-            )->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('get')
+            ->withDictParams($params)
+            ->addPath('roles')
+            ->call();
     }
 
-    public function getAll(
-        ?array $parameters = null,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$parameters] = Toolkit::filter([$parameters])->array()->trim();
+    /**
+     * Create a new Role.
+     * Required scope: "create:roles"
+     *
+     * @param string $name Role name.
+     * @param array  $data Additional fields to add, like description.
+     *
+     * @return mixed
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the name parameter is empty or is not a string.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Roles/post_roles
+     */
+    public function create($name, array $data = [])
+    {
+        $this->checkEmptyOrInvalidString($name, 'name');
 
-        /** @var array<int|string|null> $parameters */
+        $data['name'] = $name;
 
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('roles')->
-            withParams($parameters)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('post')
+            ->addPath('roles')
+            ->withBody(json_encode($data))
+            ->call();
     }
 
-    public function get(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+    /**
+     * Get a single Role by ID.
+     * Required scope: "read:roles"
+     *
+     * @param string $role_id Role ID to get.
+     *
+     * @return mixed
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the id parameter is empty or is not a string.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Roles/get_roles_by_id
+     */
+    public function get($role_id)
+    {
+        $this->checkEmptyOrInvalidString($role_id, 'role_id');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('roles', $id)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('get')
+            ->addPath('roles', $role_id)
+            ->call();
     }
 
-    public function update(
-        string $id,
-        array $body,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-        [$body] = Toolkit::filter([$body])->array()->trim();
+    /**
+     * Delete a single Role by ID.
+     * Required scope: "delete:roles"
+     *
+     * @param string $role_id Role ID to delete.
+     *
+     * @return mixed
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the id parameter is empty or is not a string.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Roles/delete_roles_by_id
+     */
+    public function delete($role_id)
+    {
+        $this->checkEmptyOrInvalidString($role_id, 'role_id');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        Toolkit::assert([
-            [$body, \Auth0\SDK\Exception\ArgumentException::missing('body')],
-        ])->isArray();
-
-        return $this->getHttpClient()->
-            method('patch')->
-            addPath('roles', $id)->
-            withBody((object) $body)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('delete')
+            ->addPath('roles', $role_id)
+            ->call();
     }
 
-    public function delete(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+    /**
+     * Update a Role by ID.
+     * Required scope: "update:roles"
+     *
+     * @param string $role_id Role to ID update.
+     * @param array  $data    Data to update.
+     *
+     * @return mixed
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the id parameter is empty or is not a string.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Roles/patch_roles_by_id
+     */
+    public function update($role_id, array $data)
+    {
+        $this->checkEmptyOrInvalidString($role_id, 'role_id');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('delete')->
-            addPath('roles', $id)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('patch')
+            ->addPath('roles', $role_id)
+            ->withBody(json_encode($data))
+            ->call();
     }
 
-    public function addPermissions(
-        string $id,
-        array $permissions,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-        [$permissions] = Toolkit::filter([$permissions])->array()->trim();
+    /**
+     * Get the permissions associated to a role.
+     * Required scope: "read:roles"
+     *
+     * @param string $role_id Role to ID to get permissions.
+     * @param array  $params  Additional parameters to send with the request.
+     *
+     * @return mixed
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the id parameter is empty or is not a string.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Roles/get_role_permission
+     */
+    public function getPermissions($role_id, array $params = [])
+    {
+        $this->checkEmptyOrInvalidString($role_id, 'role_id');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        $params = $this->normalizePagination( $params );
+        $params = $this->normalizeIncludeTotals( $params );
 
-        Toolkit::assert([
-            [$permissions, \Auth0\SDK\Exception\ArgumentException::missing('permissions')],
-        ])->isPermissions();
-
-        [$permissions] = Toolkit::filter([$permissions])->array()->permissions();
-
-        return $this->getHttpClient()->
-            method('post')->
-            addPath('roles', $id, 'permissions')->
-            withBody($permissions)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('get')
+            ->addPath('roles', $role_id, 'permissions')
+            ->withDictParams($params)
+            ->call();
     }
 
-    public function getPermissions(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+    /**
+     * Associate permissions with a role.
+     * Required scope: "update:roles"
+     *
+     * @param string $role_id     Role to ID to get permissions.
+     * @param array  $permissions Permissions to add, array of permission arrays.
+     *
+     * @return mixed
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the role_id parameter is empty or is not a string.
+     * @throws InvalidPermissionsArrayException Thrown if the permissions parameter is empty or invalid.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Roles/post_role_permission_assignment
+     */
+    public function addPermissions($role_id, array $permissions)
+    {
+        $this->checkEmptyOrInvalidString($role_id, 'role_id');
+        $this->checkInvalidPermissions( $permissions );
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        $data = [ 'permissions' => $permissions ];
 
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('roles', $id, 'permissions')->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('post')
+            ->addPath('roles', $role_id, 'permissions')
+            ->withBody(json_encode($data))
+            ->call();
     }
 
-    public function removePermissions(
-        string $id,
-        array $permissions,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-        [$permissions] = Toolkit::filter([$permissions])->array()->trim();
+    /**
+     * Delete permissions from a role.
+     * Required scope: "update:roles"
+     *
+     * @param string $role_id     Role to ID to get permissions.
+     * @param array  $permissions Permissions to delete, array of permission arrays.
+     *
+     * @return mixed
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the role_id parameter is empty or is not a string.
+     * @throws InvalidPermissionsArrayException Thrown if the permissions parameter is empty or invalid.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Roles/delete_role_permission_assignment
+     */
+    public function removePermissions($role_id, array $permissions)
+    {
+        $this->checkEmptyOrInvalidString($role_id, 'role_id');
+        $this->checkInvalidPermissions( $permissions );
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        $data = [ 'permissions' => $permissions ];
 
-        Toolkit::assert([
-            [$permissions, \Auth0\SDK\Exception\ArgumentException::missing('permissions')],
-        ])->isPermissions();
-
-        [$permissions] = Toolkit::filter([$permissions])->array()->permissions();
-
-        return $this->getHttpClient()->
-            method('delete')->
-            addPath('roles', $id, 'permissions')->
-            withBody($permissions)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('delete')
+            ->addPath('roles', $role_id, 'permissions')
+            ->withBody(json_encode($data))
+            ->call();
     }
 
-    public function addUsers(
-        string $id,
-        array $users,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-        [$users] = Toolkit::filter([$users])->array()->trim();
+    /**
+     * Get users assigned to a specific role.
+     * Required scopes:
+     *      - "read:roles"
+     *      - "read:users"
+     *
+     * @param string $role_id Role ID assigned to users.
+     * @param array  $params  Additional parameters.
+     *
+     * @return mixed
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the id parameter is empty or is not a string.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Roles/get_role_user
+     */
+    public function getUsers($role_id, array $params = [])
+    {
+        $this->checkEmptyOrInvalidString($role_id, 'role_id');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        $params = $this->normalizePagination( $params );
+        $params = $this->normalizeIncludeTotals( $params );
 
-        Toolkit::assert([
-            [$users, \Auth0\SDK\Exception\ArgumentException::missing('users')],
-        ])->isArray();
-
-        return $this->getHttpClient()->
-            method('post')->
-            addPath('roles', $id, 'users')->
-            withBody(
-                (object) [
-                    'users' => $users,
-                ],
-            )->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('get')
+            ->addPath('roles', $role_id, 'users')
+            ->withDictParams($params)
+            ->call();
     }
 
-    public function getUsers(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+    /**
+     * Add one or more users to a role.
+     * Required scopes: "update:roles"
+     *
+     * @param string $role_id Role ID to add users.
+     * @param array  $users   Array of user IDs to add to the role.
+     *
+     * @return mixed
+     *
+     * @throws EmptyOrInvalidParameterException Thrown if the role_id parameter is empty or is not a string.
+     * @throws CoreException Thrown if the users parameter is empty.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Roles/post_role_users
+     */
+    public function addUsers($role_id, array $users)
+    {
+        $this->checkEmptyOrInvalidString($role_id, 'role_id');
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        if (empty($users)) {
+            throw new EmptyOrInvalidParameterException('users');
+        }
 
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('roles', $id, 'users')->
-            withOptions($options)->
-            call();
+        $data = [ 'users' => array_unique( $users ) ];
+
+        return $this->apiClient->method('post')
+            ->addPath('roles', $role_id, 'users')
+            ->withBody(json_encode($data))
+            ->call();
     }
 }

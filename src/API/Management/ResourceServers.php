@@ -1,117 +1,151 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Auth0\SDK\API\Management;
 
-use Auth0\SDK\Contract\API\Management\ResourceServersInterface;
-use Auth0\SDK\Utility\Request\RequestOptions;
-use Auth0\SDK\Utility\Toolkit;
-use Psr\Http\Message\ResponseInterface;
+use Auth0\SDK\Exception\CoreException;
 
 /**
  * Class ResourceServers.
  * Handles requests to the Resource Servers endpoint of the v2 Management API.
  *
- * @see https://auth0.com/docs/api/management/v2#!/Resource_Servers
+ * @package Auth0\SDK\API\Management
  */
-final class ResourceServers extends ManagementEndpoint implements ResourceServersInterface
+class ResourceServers extends GenericResource
 {
-    public function create(
-        string $identifier,
-        array $body,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$identifier] = Toolkit::filter([$identifier])->string()->trim();
-        [$body] = Toolkit::filter([$body])->array()->trim();
+    /**
+     * Get all Resource Servers, by page if desired.
+     * Required scope: "read:resource_servers"
+     *
+     * @param null|integer $page     Page number to get, zero-based.
+     * @param null|integer $per_page Number of results to get, null to return the default number.
+     *
+     * @return mixed
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Resource_Servers/get_resource_servers
+     */
+    public function getAll($page = null, $per_page = null)
+    {
+        $params = [];
 
-        Toolkit::assert([
-            [$identifier, \Auth0\SDK\Exception\ArgumentException::missing('identifier')],
-        ])->isString();
+        // Pagination parameters.
+        if (null !== $page) {
+            $params['page'] = abs( (int) $page);
+        }
 
-        Toolkit::assert([
-            [$body, \Auth0\SDK\Exception\ArgumentException::missing('body')],
-        ])->isArray();
+        if (null !== $per_page) {
+            $params['per_page'] = abs( (int) $per_page);
+        }
 
-        /** @var array<mixed> $body */
-
-        return $this->getHttpClient()->
-            method('post')->
-            addPath('resource-servers')->
-            withBody(
-                (object) Toolkit::merge([
-                    'identifier' => $identifier,
-                ], $body),
-            )->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('get')
+            ->withDictParams($params)
+            ->addPath('resource-servers')
+            ->call();
     }
 
-    public function getAll(
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('resource-servers')->
-            withOptions($options)->
-            call();
+    /**
+     * Get a single Resource Server by ID or API identifier.
+     * Required scope: "read:resource_servers"
+     *
+     * @param string $id Resource Server ID or identifier to get.
+     *
+     * @return mixed
+     *
+     * @throws CoreException Thrown if the id parameter is empty or is not a string.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Resource_Servers/get_resource_servers_by_id
+     */
+    public function get($id)
+    {
+        if (empty($id) || ! is_string($id)) {
+            throw new CoreException('Invalid "id" parameter.');
+        }
+
+        return $this->apiClient->method('get')
+            ->addPath('resource-servers', $id)
+            ->call();
     }
 
-    public function get(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+    /**
+     * Create a new Resource Server.
+     * Required scope: "create:resource_servers"
+     *
+     * @param string $identifier API identifier to use.
+     * @param array  $data       Additional fields to add.
+     *
+     * @return mixed
+     *
+     * @throws CoreException Thrown if the identifier parameter or data field is empty or is not a string.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Resource_Servers/post_resource_servers
+     */
+    public function create($identifier, array $data)
+    {
+        // Backwards-compatibility with previously-unused $identifier parameter.
+        if (empty($data['identifier'])) {
+            $data['identifier'] = $identifier;
+        }
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        if (empty($data['identifier']) || ! is_string($data['identifier'])) {
+            throw new CoreException('Invalid "identifier" field.');
+        }
 
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('resource-servers', $id)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('post')
+            ->addPath('resource-servers')
+            ->withBody(json_encode($data))
+            ->call();
     }
 
-    public function update(
-        string $id,
-        array $body,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-        [$body] = Toolkit::filter([$body])->array()->trim();
+    /**
+     * Delete a Resource Server by ID.
+     * Required scope: "delete:resource_servers"
+     *
+     * @param string $id Resource Server ID or identifier to delete.
+     *
+     * @return mixed
+     *
+     * @throws CoreException Thrown if the id parameter is empty or is not a string.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Resource_Servers/delete_resource_servers_by_id
+     */
+    public function delete($id)
+    {
+        if (empty($id) || ! is_string($id)) {
+            throw new CoreException('Invalid "id" parameter.');
+        }
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        Toolkit::assert([
-            [$body, \Auth0\SDK\Exception\ArgumentException::missing('body')],
-        ])->isArray();
-
-        return $this->getHttpClient()->
-            method('patch')->
-            addPath('resource-servers', $id)->
-            withBody((object) $body)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('delete')
+            ->addPath('resource-servers', $id)
+            ->call();
     }
 
-    public function delete(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+    /**
+     * Update a Resource Server by ID.
+     * Required scope: "update:resource_servers"
+     *
+     * @param string $id   Resource Server ID or identifier to update.
+     * @param array  $data Data to update.
+     *
+     * @return mixed
+     *
+     * @throws CoreException Thrown if the id parameter is empty or is not a string.
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Resource_Servers/patch_resource_servers_by_id
+     */
+    public function update($id, array $data)
+    {
+        if (empty($id) || ! is_string($id)) {
+            throw new CoreException('Invalid "id" parameter.');
+        }
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('delete')->
-            addPath('resource-servers', $id)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('patch')
+            ->addPath('resource-servers', $id)
+            ->withBody(json_encode($data))
+            ->call();
     }
 }

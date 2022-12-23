@@ -1,67 +1,184 @@
 <?php
 
-declare(strict_types=1);
+namespace Auth0\Tests\unit\API\Management;
 
-uses()->group('management', 'management.clients');
+use Auth0\SDK\API\Helpers\InformationHeaders;
+use Auth0\SDK\API\Management;
+use Auth0\Tests\API\ApiTests;
+use GuzzleHttp\Psr7\Response;
 
-beforeEach(function(): void {
-    $this->endpoint = $this->api->mock()->clients();
-});
+/**
+ * Class ClientsTest
+ *
+ * @package Auth0\Tests\unit\API\Management
+ */
+class ClientsTest extends ApiTests
+{
 
-test('getAll() issues an appropriate request', function(): void {
-    $this->endpoint->getAll(['client_id' => '__test_client_id__', 'app_type' => '__test_app_type__']);
+    /**
+     * Expected telemetry value.
+     *
+     * @var string
+     */
+    protected static $expectedTelemetry;
 
-    expect($this->api->getRequestMethod())->toEqual('GET');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/clients');
+    /**
+     * Default request headers.
+     *
+     * @var array
+     */
+    protected static $headers = [ 'content-type' => 'json' ];
 
-    $query = $this->api->getRequestQuery();
-    expect($query)->toContain('&client_id=__test_client_id__&app_type=__test_app_type__');
-});
+    /**
+     * Runs before test suite starts.
+     */
+    public static function setUpBeforeClass(): void
+    {
+        $infoHeadersData = new InformationHeaders;
+        $infoHeadersData->setCorePackage();
+        self::$expectedTelemetry = $infoHeadersData->build();
+    }
 
-test('get() issues an appropriate request', function(): void {
-    $this->endpoint->get('__test_id__');
+    /**
+     * @throws \Exception
+     */
+    public function testThatBasicGetAllRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-    expect($this->api->getRequestMethod())->toEqual('GET');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/clients/__test_id__');
-});
+        $api->call()->clients()->getAll();
 
-test('delete() issues an appropriate request', function(): void {
-    $this->endpoint->delete('__test_id__');
+        $this->assertEquals( 'GET', $api->getHistoryMethod() );
+        $this->assertEquals( 'https://api.test.local/api/v2/clients', $api->getHistoryUrl() );
 
-    expect($this->api->getRequestMethod())->toEqual('DELETE');
-    expect($this->api->getRequestUrl())->toEndWith('/api/v2/clients/__test_id__');
-});
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
 
-test('create() issues an appropriate request', function(): void {
-    $mock = (object) [
-        'name' => uniqid(),
-        'body'=> [
-            'app_type' => uniqid()
-        ]
-    ];
+    /**
+     * @throws \Exception
+     */
+    public function testThatGetAllRequestWithParamsIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-    $this->endpoint->create($mock->name, $mock->body);
+        $api->call()->clients()->getAll( [ 'field1', 'field2' ], false, 1, 5, [ 'include_totals' => true ] );
 
-    expect($this->api->getRequestMethod())->toEqual('POST');
-    expect($this->api->getRequestUrl())->toEndWith('/api/v2/clients');
+        $this->assertEquals( 'GET', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/clients', $api->getHistoryUrl() );
 
-    $body = $this->api->getRequestBody();
-    $this->assertArrayHasKey('name', $body);
-    expect($body['name'])->toEqual($mock->name);
-    $this->assertArrayHasKey('app_type', $body);
-    expect($body['app_type'])->toEqual($mock->body['app_type']);
+        $query = '&'.$api->getHistoryQuery();
+        $this->assertStringContainsString( '&fields=field1,field2', $query );
+        $this->assertStringContainsString( '&include_fields=false', $query );
+        $this->assertStringContainsString( '&page=1', $query );
+        $this->assertStringContainsString( '&per_page=5', $query );
+        $this->assertStringContainsString( '&include_totals=true', $query );
 
-    $body = $this->api->getRequestBodyAsString();
-    expect($body)->toEqual(json_encode(array_merge(['name' => $mock->name], $mock->body)));
-});
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
 
-test('update() issues an appropriate request', function(): void {
-    $this->endpoint->update('__test_id__', ['name' => '__test_new_name__']);
+    /**
+     * @throws \Exception
+     */
+    public function testThatGetRequestWithParamsIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
 
-    expect($this->api->getRequestMethod())->toEqual('PATCH');
-    expect($this->api->getRequestUrl())->toEndWith('/api/v2/clients/__test_id__');
+        $api->call()->clients()->get( '__test_id__', [ 'field3', 'field4' ], true );
 
-    $body = $this->api->getRequestBody();
-    $this->assertArrayHasKey('name', $body);
-    expect($body['name'])->toEqual('__test_new_name__');
-});
+        $this->assertEquals( 'GET', $api->getHistoryMethod() );
+        $this->assertStringStartsWith( 'https://api.test.local/api/v2/clients/__test_id__', $api->getHistoryUrl() );
+
+        $query = '&'.$api->getHistoryQuery();
+        $this->assertStringContainsString( '&fields=field3,field4', $query );
+        $this->assertStringContainsString( '&include_fields=true', $query );
+
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testThatDeleteRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
+
+        $api->call()->clients()->delete( '__test_id__' );
+
+        $this->assertEquals( 'DELETE', $api->getHistoryMethod() );
+        $this->assertEquals( 'https://api.test.local/api/v2/clients/__test_id__', $api->getHistoryUrl() );
+
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testThatCreateRequestThrowsExceptionIfNameKeyIsMissing()
+    {
+        $api = new Management( uniqid(), uniqid() );
+
+        try {
+            $api->clients()->create( [ 'app_type' => '__test_app_type__' ] );
+            $exception_message = 'No exception caught';
+        } catch (\Exception $e) {
+            $exception_message = $e->getMessage();
+        }
+
+        $this->assertStringStartsWith( 'Missing required "name" field', $exception_message );
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testThatCreateRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
+
+        $api->call()->clients()->create( [ 'name' => '__test_name__', 'app_type' => '__test_app_type__' ] );
+
+        $this->assertEquals( 'POST', $api->getHistoryMethod() );
+        $this->assertEquals( 'https://api.test.local/api/v2/clients', $api->getHistoryUrl() );
+
+        $body = $api->getHistoryBody();
+        $this->assertArrayHasKey( 'name', $body );
+        $this->assertEquals( '__test_name__', $body['name'] );
+        $this->assertArrayHasKey( 'app_type', $body );
+        $this->assertEquals( '__test_app_type__', $body['app_type'] );
+
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
+    }
+
+    /**
+     * @throws \Exception
+     */
+    public function testThatUpdateRequestIsFormedProperly()
+    {
+        $api = new MockManagementApi( [ new Response( 200, self::$headers ) ] );
+
+        $api->call()->clients()->update( '__test_id__', [ 'name' => '__test_new_name__' ] );
+
+        $this->assertEquals( 'PATCH', $api->getHistoryMethod() );
+        $this->assertEquals( 'https://api.test.local/api/v2/clients/__test_id__', $api->getHistoryUrl() );
+
+        $body = $api->getHistoryBody();
+        $this->assertArrayHasKey( 'name', $body );
+        $this->assertEquals( '__test_new_name__', $body['name'] );
+
+        $headers = $api->getHistoryHeaders();
+        $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
+    }
+
+}

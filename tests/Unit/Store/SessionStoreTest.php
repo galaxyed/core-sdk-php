@@ -1,74 +1,151 @@
 <?php
+namespace Auth0\Tests\Store;
 
-declare(strict_types=1);
-
-use Auth0\SDK\Configuration\SdkConfiguration;
 use Auth0\SDK\Store\SessionStore;
-use Auth0\Tests\Utilities\MockDomain;
+use PHPUnit\Framework\TestCase;
 
-uses()->group('storage', 'storage.session');
+/**
+ * Class SessionStoreTest.
+ * Tests the SessionStore class.
+ */
+class SessionStoreTest extends TestCase
+{
+    /**
+     * Session key for test values.
+     */
+    const TEST_KEY = 'never_compromise_on_identity';
 
-beforeEach(function(): void {
-    session_destroy();
+    /**
+     * Session value to test.
+     */
+    const TEST_VALUE = '__Auth0__';
 
-    $this->configuration = new SdkConfiguration([
-        'domain' => MockDomain::valid(),
-        'clientId' => uniqid(),
-        'cookieSecret' => uniqid(),
-        'clientSecret' => uniqid(),
-        'redirectUri' => uniqid(),
-    ]);
+    /**
+     * Expected cookie lifetime of 1 week.
+     * 60 s/min * 60 min/h * 24 h/day * 7 days.
+     */
+    const COOKIE_LIFETIME = 604800;
 
-    $this->namespace = uniqid();
+    /**
+     * Reusable instance of SessionStore class to be tested.
+     *
+     * @var SessionStore
+     */
+    public static $sessionStore;
 
-    $this->store = new SessionStore($this->configuration, $this->namespace);
-    $this->store->start();
-});
+    /**
+     * Full session array key.
+     *
+     * @var string
+     */
+    public static $sessionKey;
 
-test('set() assigns values as expected', function(string $key, string $value): void {
-    $this->store->set($key, $value);
-    expect($_SESSION[$this->namespace . '_' . $key])->toEqual($value);
-})->with(['mocked data' => [
-    fn() => uniqid(),
-    fn() => uniqid(),
-]]);
+    /**
+     * Test fixture for class, runs once before any tests.
+     *
+     * @return void
+     */
+    public static function setUpBeforeClass(): void
+    {
+        self::$sessionStore = new SessionStore();
+        self::$sessionKey   = 'auth0__'.self::TEST_KEY;
+    }
 
-test('get() retrieves values as expected', function(string $key, string $value): void {
-    $_SESSION[$this->namespace . '_' . $key] = $value;
-    expect($this->store->get($key, 'foobar'))->toEqual($value);
-})->with(['mocked data' => [
-    fn() => uniqid(),
-    fn() => uniqid(),
-]]);
+    /**
+     * Test that SessionStore::initSession ran and cookie params are stored correctly.
+     *
+     * @return void
+     */
+    public function testInitSession()
+    {
+        // Suppressing "headers already sent" warning related to cookies.
+        // phpcs:ignore
+        @self::$sessionStore->set(self::TEST_KEY, self::TEST_VALUE);
 
-test('get() retrieves a default value as expected', function(string $key): void {
-    expect($this->store->get($key, 'foobar'))->toEqual('foobar');
-})->with(['mocked key' => [
-    fn() => uniqid(),
-]]);
+        // Make sure we have a session to check.
+        $this->assertNotEmpty(session_id());
+    }
 
-test('delete() clears values as expected', function(string $key, string $value): void {
-    $_SESSION[$this->namespace . '_' . $key] = $value;
-    expect(isset($_SESSION[$this->namespace . '_' . $key]))->toBeTrue();
+    /**
+     * Test that SessionStore::getSessionKeyName returns the expected name.
+     *
+     * @return void
+     */
+    public function testGetSessionKey()
+    {
+        $test_this_key_name = self::$sessionStore->getSessionKeyName(self::TEST_KEY);
+        $this->assertEquals(self::$sessionKey, $test_this_key_name);
+    }
 
-    $this->store->delete($key);
+    /**
+     * Test that SessionStore::set stores the correct value.
+     *
+     * @return void
+     *
+     * @runInSeparateProcess
+     */
+    public function testSet()
+    {
+        // Make sure this key does not exist yet so we can test that it was set.
+        $_SESSION = [];
 
-    expect($this->store->get($key))->toBeNull();
-    expect(isset($_SESSION[$this->namespace . '_' . $key]))->toBeFalse();
-})->with(['mocked data' => [
-    fn() => uniqid(),
-    fn() => uniqid(),
-]]);
+        // Suppressing "headers already sent" warning related to cookies.
+        // phpcs:ignore
+        @self::$sessionStore->set(self::TEST_KEY, self::TEST_VALUE);
 
-test('purge() clears values as expected', function(string $key, string $value): void {
-    $_SESSION[$this->namespace . '_' . $key] = $value;
-    expect(isset($_SESSION[$this->namespace . '_' . $key]))->toBeTrue();
+        $this->assertEquals(self::TEST_VALUE, $_SESSION[self::$sessionKey]);
+    }
 
-    $this->store->purge();
+    /**
+     * Test that SessionStore::get stores the correct value.
+     *
+     * @return void
+     *
+     * @runInSeparateProcess
+     */
+    public function testGet()
+    {
+        session_start();
+        $_SESSION[self::$sessionKey] = self::TEST_VALUE;
+        $this->assertEquals(self::TEST_VALUE, self::$sessionStore->get(self::TEST_KEY));
+    }
 
-    expect($this->store->get($key))->toBeNull();
-    expect(isset($_SESSION[$this->namespace . '_' . $key]))->toBeFalse();
-})->with(['mocked data' => [
-    fn() => uniqid(),
-    fn() => uniqid(),
-]]);
+    /**
+     * Test that SessionStore::delete trashes the stored value.
+     *
+     * @return void
+     *
+     * @runInSeparateProcess
+     */
+    public function testDelete()
+    {
+        session_start();
+        $_SESSION[self::$sessionKey] = self::TEST_VALUE;
+        $this->assertTrue(isset($_SESSION[self::$sessionKey]));
+
+        self::$sessionStore->delete(self::TEST_KEY);
+        $this->assertNull(self::$sessionStore->get(self::TEST_KEY));
+        $this->assertFalse(isset($_SESSION[self::$sessionKey]));
+    }
+
+    /**
+     * Test that custom base names can be set and return the correct value.
+     *
+     * @return void
+     *
+     * @runInSeparateProcess
+     */
+    public function testCustomSessionBaseName()
+    {
+        $test_base_name = 'test_base_name';
+
+        self::$sessionStore = new SessionStore( $test_base_name );
+        $test_this_key_name = self::$sessionStore->getSessionKeyName(self::TEST_KEY);
+        $this->assertEquals($test_base_name.'_'.self::TEST_KEY, $test_this_key_name);
+
+        // Suppressing "headers already sent" warning related to cookies.
+        // phpcs:ignore
+        @self::$sessionStore->set(self::TEST_KEY, self::TEST_VALUE);
+        $this->assertEquals(self::TEST_VALUE, self::$sessionStore->get(self::TEST_KEY));
+    }
+}

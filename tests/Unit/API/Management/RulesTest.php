@@ -1,88 +1,78 @@
 <?php
+namespace Auth0\Tests\unit\API\Management;
 
-declare(strict_types=1);
+use Auth0\SDK\API\Management;
+use Auth0\SDK\Exception\CoreException;
 
-uses()->group('management', 'management.rules');
+use Auth0\Tests\API\ApiTests;
 
-beforeEach(function(): void {
-    $this->endpoint = $this->api->mock()->rules();
-});
+/**
+ * Class RulesTest.
+ *
+ * @package Auth0\Tests\unit\API\Management
+ */
+class RulesTest extends ApiTests
+{
 
-test('getAll() issues an appropriate request', function(): void {
-    $this->endpoint->getAll(['enabled' => true]);
+    /**
+     * Test that exceptions are thrown for specific methods in specific cases.
+     *
+     * @return void
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     */
+    public function testExceptions()
+    {
+        $api = new Management(uniqid(), uniqid());
 
-    expect($this->api->getRequestMethod())->toEqual('GET');
-    expect($this->api->getRequestUrl())->toStartWith('https://' . $this->api->mock()->getConfiguration()->getDomain() . '/api/v2/rules');
+        // Test that the get method throws an exception if the $id parameter is empty.
+        $caught_get_no_id_exception = false;
+        try {
+            $api->rules()->get(null);
+        } catch (CoreException $e) {
+            $caught_get_no_id_exception = $this->errorHasString($e, 'Invalid "id" parameter');
+        }
 
-    $query = $this->api->getRequestQuery();
-    expect($query)->toContain('enabled=true');
-});
+        $this->assertTrue($caught_get_no_id_exception);
 
-test('get() issues an appropriate request', function(): void {
-    $mockupId = uniqid();
+        // Test that the delete method throws an exception if the $id parameter is empty.
+        $caught_delete_no_id_exception = false;
+        try {
+            $api->rules()->delete(null);
+        } catch (CoreException $e) {
+            $caught_delete_no_id_exception = $this->errorHasString($e, 'Invalid "id" parameter');
+        }
 
-    $this->endpoint->get($mockupId);
+        $this->assertTrue($caught_delete_no_id_exception);
 
-    expect($this->api->getRequestMethod())->toEqual('GET');
-    expect($this->api->getRequestUrl())->toEndWith('/api/v2/rules/' . $mockupId);
-});
+        // Test that the create method throws an exception if no "name" field is passed.
+        $caught_create_no_name_exception = false;
+        try {
+            $api->rules()->create(['script' => 'function(){}']);
+        } catch (CoreException $e) {
+            $caught_create_no_name_exception = $this->errorHasString($e, 'Missing required "name" field');
+        }
 
-test('delete() issues an appropriate request', function(): void {
-    $mockupId = uniqid();
+        $this->assertTrue($caught_create_no_name_exception);
 
-    $this->endpoint->delete($mockupId);
+        // Test that the create method throws an exception if no "script" field is passed.
+        $caught_create_no_script_exception = false;
+        try {
+            $api->rules()->create(['name' => 'test-create-rule-'.rand()]);
+        } catch (CoreException $e) {
+            $caught_create_no_script_exception = $this->errorHasString($e, 'Missing required "script" field');
+        }
 
-    expect($this->api->getRequestMethod())->toEqual('DELETE');
-    expect($this->api->getRequestUrl())->toEndWith('/api/v2/rules/' . $mockupId);
-});
+        $this->assertTrue($caught_create_no_script_exception);
 
-test('create() issues an appropriate request', function(): void {
-    $mockup = (object) [
-        'name' => uniqid(),
-        'script' => uniqid(),
-        'query' => [ 'test_parameter' => uniqid() ],
-    ];
+        // Test that the update method throws an exception if the $id parameter is empty.
+        $caught_update_no_id_exception = false;
+        try {
+            $api->rules()->update(null, []);
+        } catch (CoreException $e) {
+            $caught_update_no_id_exception = $this->errorHasString($e, 'Invalid "id" parameter');
+        }
 
-    $this->endpoint->create($mockup->name, $mockup->script, $mockup->query);
-
-    expect($this->api->getRequestMethod())->toEqual('POST');
-    expect($this->api->getRequestUrl())->toEndWith('/api/v2/rules');
-
-    $headers = $this->api->getRequestHeaders();
-    expect($headers['Content-Type'][0])->toEqual('application/json');
-
-    $body = $this->api->getRequestBody();
-    $this->assertArrayHasKey('name', $body);
-    expect($body['name'])->toEqual($mockup->name);
-
-    $this->assertArrayHasKey('script', $body);
-    expect($body['script'])->toEqual($mockup->script);
-
-    $this->assertArrayHasKey('test_parameter', $body);
-    expect($body['test_parameter'])->toEqual($mockup->query['test_parameter']);
-
-    $body = $this->api->getRequestBodyAsString();
-    expect($body)->toEqual(json_encode(array_merge(['name' => $mockup->name, 'script' => $mockup->script], $mockup->query)));
-});
-
-test('update() issues an appropriate request', function(): void {
-    $mockup = (object) [
-        'id' => uniqid(),
-        'query' => [ 'test_parameter' => uniqid() ],
-    ];
-
-    $this->endpoint->update($mockup->id, $mockup->query);
-
-    expect($this->api->getRequestMethod())->toEqual('PATCH');
-    expect($this->api->getRequestUrl())->toEndWith('/api/v2/rules/' . $mockup->id);
-
-    $headers = $this->api->getRequestHeaders();
-    expect($headers['Content-Type'][0])->toEqual('application/json');
-
-    $body = $this->api->getRequestBody();
-    $this->assertArrayHasKey('test_parameter', $body);
-    expect($body['test_parameter'])->toEqual($mockup->query['test_parameter']);
-
-    $body = $this->api->getRequestBodyAsString();
-    expect($body)->toEqual(json_encode($mockup->query));
-});
+        $this->assertTrue($caught_update_no_id_exception);
+    }
+}

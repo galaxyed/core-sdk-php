@@ -1,115 +1,167 @@
 <?php
 
-declare(strict_types=1);
-
 namespace Auth0\SDK\API\Management;
-
-use Auth0\SDK\Contract\API\Management\ClientsInterface;
-use Auth0\SDK\Utility\Request\RequestOptions;
-use Auth0\SDK\Utility\Toolkit;
-use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class Clients.
  * Handles requests to the Clients endpoint of the v2 Management API.
  *
- * @see https://auth0.com/docs/api/management/v2#!/Clients
+ * @package Auth0\SDK\API\Management
  */
-final class Clients extends ManagementEndpoint implements ClientsInterface
+class Clients extends GenericResource
 {
-    public function create(
-        string $name,
-        ?array $body = null,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$name] = Toolkit::filter([$name])->string()->trim();
-        [$body] = Toolkit::filter([$body])->array()->trim();
-
-        Toolkit::assert([
-            [$name, \Auth0\SDK\Exception\ArgumentException::missing('name')],
-        ])->isString();
-
-        /** @var array<mixed> $body */
-
-        return $this->getHttpClient()->
-            method('post')->
-            addPath('clients')->
-            withBody(
-                (object) Toolkit::merge([
-                    'name' => $name,
-                ], $body),
-            )->
-            withOptions($options)->
-            call();
-    }
-
+    /**
+     * Get all Clients by page.
+     * Required scopes:
+     *      - "read:clients" - For any call to this endpoint.
+     *      - "read:client_keys" - To retrieve "client_secret" and "encryption_key" attributes.
+     *
+     * @param null|string|array $fields         Fields to include or exclude from the result:
+     *      - Including only the fields required can speed up API calls significantly.
+     *      - Arrays will be converted to comma-separated strings.
+     * @param null|boolean      $include_fields True to include $fields, false to exclude $fields.
+     * @param null|integer      $page           Page number to get, zero-based.
+     * @param null|integer      $per_page       Number of results to get, null to return the default number.
+     * @param array             $add_params     Additional API parameters, over-written by function params.
+     *
+     * @return mixed
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Clients/get_clients
+     */
     public function getAll(
-        ?array $parameters = null,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$parameters] = Toolkit::filter([$parameters])->array()->trim();
+        $fields = null,
+        $include_fields = null,
+        $page = null,
+        $per_page = null,
+        array $add_params = []
+    )
+    {
+        // Set additional parameters first so they are over-written by function parameters.
+        $params = is_array($add_params) ? $add_params : [];
 
-        /** @var array<int|string|null> $parameters */
+        // Results fields.
+        if (! empty($fields)) {
+            $params['fields'] = is_array($fields) ? implode(',', $fields) : $fields;
+            if (null !== $include_fields) {
+                $params['include_fields'] = $include_fields;
+            }
+        }
 
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('clients')->
-            withParams($parameters)->
-            withOptions($options)->
-            call();
+        // Pagination.
+        if (null !== $page) {
+            $params['page'] = abs( (int) $page);
+            if (null !== $per_page) {
+                $params['per_page'] = $per_page;
+            }
+        }
+
+        return $this->apiClient->method('get')
+            ->addPath('clients')
+            ->withDictParams($params)
+            ->call();
     }
 
-    public function get(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+    /**
+     * Get a single Client by ID.
+     * Required scopes:
+     *      - "read:clients" - For any call to this endpoint.
+     *      - "read:client_keys" - To retrieve "client_secret" and "encryption_key" attributes.
+     *
+     * @param string            $client_id      Client ID to get.
+     * @param null|string|array $fields         Fields to include or exclude from the result:
+     *      - Including only the fields required can speed up API calls significantly.
+     *      - Arrays will be converted to comma-separated strings.
+     * @param null|boolean      $include_fields True to include $fields, false to exclude $fields.
+     *
+     * @return mixed
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Clients/get_clients_by_id
+     */
+    public function get($client_id, $fields = null, $include_fields = null)
+    {
+        $params = [];
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        // Results fields.
+        if (! empty($fields)) {
+            $params['fields'] = is_array($fields) ? implode(',', $fields) : $fields;
+            if (null !== $include_fields) {
+                $params['include_fields'] = $include_fields;
+            }
+        }
 
-        return $this->getHttpClient()->
-            method('get')->
-            addPath('clients', $id)->
-            withOptions($options)->
-            call();
+        return $this->apiClient->method('get')
+            ->addPath('clients', $client_id)
+            ->withDictParams($params)
+            ->call();
     }
 
-    public function update(
-        string $id,
-        ?array $body = null,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
-        [$body] = Toolkit::filter([$body])->array()->trim();
-
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
-
-        return $this->getHttpClient()->
-            method('patch')->
-            addPath('clients', $id)->
-            withBody($body ?? [])->
-            withOptions($options)->
-            call();
+    /**
+     * Delete a Client by ID.
+     * Required scope: "delete:clients"
+     *
+     * @param string $client_id Client ID to delete.
+     *
+     * @return mixed|string
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Clients/delete_clients_by_id
+     */
+    public function delete($client_id)
+    {
+        return $this->apiClient->method('delete')
+            ->addPath('clients', $client_id)
+            ->call();
     }
 
-    public function delete(
-        string $id,
-        ?RequestOptions $options = null,
-    ): ResponseInterface {
-        [$id] = Toolkit::filter([$id])->string()->trim();
+    /**
+     * Create a new Client.
+     * Required scope: "create:clients"
+     *
+     * @param array $data Client create data; "name" field is required.
+     *
+     * @return mixed|string
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Clients/post_clients
+     */
+    public function create(array $data)
+    {
+        if (empty($data['name'])) {
+            throw new \Exception('Missing required "name" field.');
+        }
 
-        Toolkit::assert([
-            [$id, \Auth0\SDK\Exception\ArgumentException::missing('id')],
-        ])->isString();
+        return $this->apiClient->method('post')
+            ->addPath('clients')
+            ->withBody(json_encode($data))
+            ->call();
+    }
 
-        return $this->getHttpClient()->
-            method('delete')->
-            addPath('clients', $id)->
-            withOptions($options)->
-            call();
+    /**
+     * Update a Client.
+     * Required scopes:
+     *      - "update:clients" - For any call to this endpoint.
+     *      - "update:client_keys" - To update "client_secret" and "encryption_key" attributes.
+     *
+     * @param string $client_id Client ID to update.
+     * @param array  $data      Client data to update.
+     *
+     * @return mixed|string
+     *
+     * @throws \Exception Thrown by the HTTP client when there is a problem with the API call.
+     *
+     * @link https://auth0.com/docs/api/management/v2#!/Clients/patch_clients_by_id
+     */
+    public function update($client_id, array $data)
+    {
+        return $this->apiClient->method('patch')
+            ->addPath('clients', $client_id)
+            ->withBody(json_encode($data))
+            ->call();
     }
 }
