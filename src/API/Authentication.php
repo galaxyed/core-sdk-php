@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace Auth0\SDK\API;
 
 use Auth0\SDK\API\Header\AuthorizationBearer;
+use Auth0\SDK\API\Header\AuthorizationBasic;
 use Auth0\SDK\API\Header\ForwardedFor;
 use Auth0\SDK\API\Helpers\ApiClient;
 use Auth0\SDK\Exception\ApiException;
@@ -423,7 +424,8 @@ class Authentication
                         ->addPath( 'oauth2', 'token' )
                         ->addFormParam( 'redirect_uri', $options['redirect_uri'] )
                         ->addFormParam( 'code', $options['code'] )
-                        ->addFormParam( 'grant_type', $options['grant_type'] );
+                        ->addFormParam( 'grant_type', $options['grant_type'] )
+                        ->withHeader( new AuthorizationBasic( base64_encode( $options['client_id'] . ':' . $options['client_secret'] ) ) );
         } else { // client_secret_post
             $request = $this->apiClient->method( 'post' )
                         ->addPath( 'oauth2', 'token' )
