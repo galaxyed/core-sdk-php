@@ -416,7 +416,7 @@ class Authentication
             throw new ApiException('grant_type is mandatory');
         }
 
-        $request = $this->apiClient->addPath( 'oauth2', 'token' )
+        $request = $this->apiClient->addPath( 'oauth2', 'token' );
 
         if ($this->clientSecretAuthenticationMethod == 'client_secret_basic') {
             $request = $request->method('post', false)
