@@ -287,6 +287,11 @@ class Auth0
             $this->clientSecret = self::urlSafeBase64Decode($this->clientSecret);
         }
 
+        $clientSecretAuthenticationMethod = $config['client_secret_authentication_method'] ?? $_ENV['AUTH0_CLIENT_SECRET_AUTHENTICATION_METHOD'] ?? 'client_secret_post';
+        if (empty($clientSecretAuthenticationMethod)) {
+            throw new CoreException('Invalid client_secret_authentication_method');
+        }
+
         $this->organization = $config['organization'] ?? $_ENV['AUTH0_ORGANIZATION'] ?? null;
 
         $this->audience      = $config['audience'] ?? null;
@@ -357,7 +362,8 @@ class Auth0
             $this->audience,
             $this->scope,
             $this->guzzleOptions,
-            $this->organization
+            $this->organization,
+            $clientSecretAuthenticationMethod
         );
 
         $this->user         = $this->store->get('user');

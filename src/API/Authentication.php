@@ -81,6 +81,35 @@ class Authentication
     private $apiClient;
 
     /**
+     * ApiClient instance.
+     *
+     * client_secret_basic
+     * Authorization là base64 của client_id:client_secret
+     * 
+     * curl --location --request POST 'https://im-id.icanx.vn/oauth2/token' \
+--header 'content-type: application/x-www-form-urlencoded' \
+--header 'Authorization: Basic aWMtY29ubmVjdF9zdHVkZW50LXBvcnRhbC04NzdmOmljLWNvbm5lY3Qtc3R1ZGVudC1wb3J0YWwtYWQyMjkyNzYtOTMwYy00NGEzLTg3N2YtNjM4NjM0MGRmNDgzLWRldg==' \
+--data-raw 'redirect_uri=http%3A%2F%2Flocalhost%2Fphptest%2Fauth.php&code=3UQsCkWp_WQxL6XrPtJuzQdFWZBdNadBF_BBiw9o8ss.bsrayskk0EsOFynx9-adndBBzDaLaPLKezAWquFx_WE&grant_type=authorization_code'
+     * 
+     * 
+     * 
+     * client_secret_post
+     * 
+     * client_id và client_secret nằm trong body
+     * 
+     * curl --location --request POST 'https://im-id.icanx.vn/oauth2/token' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "client_secret": "ic-connect-student-portal-ad229276-930c-44a3-877f-6386340df483-dev",
+  "redirect_uri": "http://localhost/phptest/auth.php",
+  "code": "3UQsCkWp_WQxL6XrPtJuzQdFWZBdNadBF_BBiw9o8ss.bsrayskk0EsOFynx9-adndBBzDaLaPLKezAWquFx_WE",
+  "grant_type": "authorization_code",
+  "client_id": "ic-connect_student-portal-877f"
+}'
+     */
+    private $clientSecretAuthenticationMethod;
+
+    /**
      * Authentication constructor.
      *
      * @param string      $domain        Tenant domain, found in Application settings.
@@ -101,7 +130,8 @@ class Authentication
         ?string $audience = null,
         ?string $scope = null,
         array $guzzleOptions = [],
-        ?string $organization = null
+        ?string $organization = null,
+        ?string $clientSecretAuthenticationMethod = 'client_secret_post'
     )
     {
         $this->domain        = $domain;
@@ -111,6 +141,7 @@ class Authentication
         $this->scope         = $scope;
         $this->guzzleOptions = $guzzleOptions;
         $this->organization  = $organization;
+        $this->clientSecretAuthenticationMethod  = $clientSecretAuthenticationMethod;
 
         $this->apiClient = new ApiClient( [
             'domain' => 'https://'.$this->domain,
@@ -385,9 +416,17 @@ class Authentication
             throw new ApiException('grant_type is mandatory');
         }
 
-        $request = $this->apiClient->method('post')
-            ->addPath( 'oauth2', 'token' )
-            ->withBody(json_encode($options));
+        $request = $this->apiClient->addPath( 'oauth2', 'token' )
+
+        if ($this->clientSecretAuthenticationMethod == 'client_secret_basic') {
+            $request = $request->method('post', false)
+                        ->addFormParam('redirect_uri', $options['redirect_uri'])
+                        ->addFormParam('code', $options['code'])
+                        ->addFormParam('grant_type', $options['grant_type']);
+        } else { // client_secret_post
+            $request = $request->method('post')
+                        ->withBody(json_encode($options));
+        }
 
         if (isset($options['auth0_forwarded_for'])) {
             $request->withHeader( new ForwardedFor( $options['auth0_forwarded_for'] ) );
