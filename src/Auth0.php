@@ -588,11 +588,13 @@ class Auth0
             $this->setIdToken($response['id_token']);
         }
 
-        if ($this->skipUserinfo) {
-            $user = $this->idTokenDecoded;
-        } else {
-            $user = $this->authentication->userinfo($this->accessToken);
-        }
+        // if ($this->skipUserinfo) {
+        //     $user = $this->idTokenDecoded;
+        // } else {
+        //     $user = $this->authentication->userinfo($this->accessToken);
+        // }
+
+        $user = $this->authentication->userinfo($this->accessToken);
 
         if ($user) {
             $this->setUser($user);
