@@ -384,7 +384,7 @@ class Authentication
     public function userinfo(string $access_token) : array
     {
         return $this->apiClient->method('get')
-        ->addPath('userinfo')
+        ->addPath('auth', 'userinfo')
         ->withHeader(new AuthorizationBearer($access_token))
         ->call();
     }
