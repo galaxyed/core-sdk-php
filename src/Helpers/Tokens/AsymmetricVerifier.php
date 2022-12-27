@@ -46,7 +46,7 @@ final class AsymmetricVerifier extends SignatureVerifier
      */
     protected function checkSignature(Token $token) : bool
     {
-        return true
+        return true;
         // TODO enable checkSignature
         // $tokenKid   = $token->getHeader('kid', false);
         // $signingKey = is_array( $this->jwks ) ? ($this->jwks[$tokenKid] ?? null) : $this->jwks->getKey( $tokenKid );
