@@ -88,9 +88,9 @@ class Authentication
      * Authorization là base64 của client_id:client_secret
      * 
      * curl --location --request POST 'https://im-id.icanx.vn/oauth2/token' \
---header 'content-type: application/x-www-form-urlencoded' \
---header 'Authorization: Basic aWMtY29ubmVjdF9zdHVkZW50LXBvcnRhbC04NzdmOmljLWNvbm5lY3Qtc3R1ZGVudC1wb3J0YWwtYWQyMjkyNzYtOTMwYy00NGEzLTg3N2YtNjM4NjM0MGRmNDgzLWRldg==' \
---data-raw 'redirect_uri=http%3A%2F%2Flocalhost%2Fphptest%2Fauth.php&code=3UQsCkWp_WQxL6XrPtJuzQdFWZBdNadBF_BBiw9o8ss.bsrayskk0EsOFynx9-adndBBzDaLaPLKezAWquFx_WE&grant_type=authorization_code'
+     *  --header 'content-type: application/x-www-form-urlencoded' \
+     *  --header 'Authorization: Basic <base64>' \
+     *  --data-raw 'redirect_uri=http%3A%2F%2Flocalhost%2Fphptest%2Fauth.php&code=3UQsCkWp_WQxL6XrPtJuzQdFWZBdNadBF_BBiw9o8ss.bsrayskk0EsOFynx9-adndBBzDaLaPLKezAWquFx_WE&grant_type=authorization_code'
      * 
      * 
      * 
@@ -99,14 +99,14 @@ class Authentication
      * client_id và client_secret nằm trong body
      * 
      * curl --location --request POST 'https://im-id.icanx.vn/oauth2/token' \
---header 'Content-Type: application/json' \
---data-raw '{
-  "client_secret": "ic-connect-student-portal-ad229276-930c-44a3-877f-6386340df483-dev",
-  "redirect_uri": "http://localhost/phptest/auth.php",
-  "code": "3UQsCkWp_WQxL6XrPtJuzQdFWZBdNadBF_BBiw9o8ss.bsrayskk0EsOFynx9-adndBBzDaLaPLKezAWquFx_WE",
-  "grant_type": "authorization_code",
-  "client_id": "ic-connect_student-portal-877f"
-}'
+     *  --header 'Content-Type: application/json' \
+     *  --data-raw '{
+     *    "client_secret": "...",
+     *    "redirect_uri": "http://localhost/phptest/auth.php",
+     *    "code": "...",
+     *    "grant_type": "authorization_code",
+     *    "client_id": "..."
+     *  }'
      */
     private $clientSecretAuthenticationMethod;
 
