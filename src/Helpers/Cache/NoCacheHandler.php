@@ -1,6 +1,6 @@
 <?php
 
-namespace Auth0\SDK\Helpers\Cache;
+namespace ICANID\SDK\Helpers\Cache;
 
 use Psr\SimpleCache\CacheInterface;
 

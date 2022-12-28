@@ -1,20 +1,20 @@
 <?php
 declare(strict_types=1);
 
-namespace Auth0\SDK\Store;
+namespace ICANID\SDK\Store;
 
 /**
  * Class CookieStore.
  * This class provides a layer to persist transient auth data using cookies.
  *
- * @package Auth0\SDK\Store
+ * @package ICANID\SDK\Store
  */
 class CookieStore implements StoreInterface
 {
     /**
      * Default cookie base name.
      */
-    const BASE_NAME = 'auth0_';
+    const BASE_NAME = 'icanid_';
 
     /**
      * Cookie base name.

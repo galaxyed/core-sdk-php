@@ -1,8 +1,8 @@
 <?php
 
-namespace Auth0\SDK\API\Management;
+namespace ICANID\SDK\API\Management;
 
-use Auth0\SDK\Exception\EmptyOrInvalidParameterException;
+use ICANID\SDK\Exception\EmptyOrInvalidParameterException;
 
 class Jobs extends GenericResource
 {

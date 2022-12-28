@@ -1,12 +1,12 @@
 <?php
-namespace Auth0\SDK\API\Management;
+namespace ICANID\SDK\API\Management;
 
-use Auth0\SDK\Exception\CoreException;
+use ICANID\SDK\Exception\CoreException;
 
 /**
  * Class Grants
  *
- * @package Auth0\SDK\API\Management
+ * @package ICANID\SDK\API\Management
  */
 class Grants extends GenericResource
 {

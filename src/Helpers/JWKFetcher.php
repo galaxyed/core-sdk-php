@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace Auth0\SDK\Helpers;
+namespace ICANID\SDK\Helpers;
 
-use Auth0\SDK\API\Helpers\RequestBuilder;
-use Auth0\SDK\Helpers\Cache\NoCacheHandler;
-use Auth0\SDK\Exception\CoreException;
+use ICANID\SDK\API\Helpers\RequestBuilder;
+use ICANID\SDK\Helpers\Cache\NoCacheHandler;
+use ICANID\SDK\Exception\CoreException;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\RequestException;
 use Psr\SimpleCache\CacheInterface;
@@ -13,7 +13,7 @@ use Psr\SimpleCache\CacheInterface;
 /**
  * Class JWKFetcher.
  *
- * @package Auth0\SDK\Helpers
+ * @package ICANID\SDK\Helpers
  */
 class JWKFetcher
 {

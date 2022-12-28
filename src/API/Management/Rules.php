@@ -1,14 +1,14 @@
 <?php
 
-namespace Auth0\SDK\API\Management;
+namespace ICANID\SDK\API\Management;
 
-use Auth0\SDK\Exception\CoreException;
+use ICANID\SDK\Exception\CoreException;
 
 /**
  * Class Rules.
  * Handles requests to the Rules endpoint of the v2 Management API.
  *
- * @package Auth0\SDK\API\Management
+ * @package ICANID\SDK\API\Management
  */
 class Rules extends GenericResource
 {

@@ -1,15 +1,15 @@
 <?php
-namespace Auth0\Tests\unit\API\Management;
+namespace ICANID\Tests\unit\API\Management;
 
-use Auth0\SDK\API\Helpers\InformationHeaders;
-use Auth0\Tests\API\ApiTests;
-use Auth0\Tests\Traits\ErrorHelpers;
+use ICANID\SDK\API\Helpers\InformationHeaders;
+use ICANID\Tests\API\ApiTests;
+use ICANID\Tests\Traits\ErrorHelpers;
 use GuzzleHttp\Psr7\Response;
 
 /**
  * Class GuardianTest.
  *
- * @package Auth0\Tests\unit\API\Management
+ * @package ICANID\Tests\unit\API\Management
  */
 class GuardianTest extends ApiTests
 {
@@ -52,7 +52,7 @@ class GuardianTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$telemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$telemetry, $headers['ICANID-Client'][0] );
     }
 
     /**
@@ -77,7 +77,7 @@ class GuardianTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$telemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$telemetry, $headers['ICANID-Client'][0] );
     }
 
     /**
@@ -102,7 +102,7 @@ class GuardianTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$telemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$telemetry, $headers['ICANID-Client'][0] );
     }
 
 }

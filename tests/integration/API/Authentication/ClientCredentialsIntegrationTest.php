@@ -1,8 +1,8 @@
 <?php
-namespace Auth0\Tests\integration\API\Authentication;
+namespace ICANID\Tests\integration\API\Authentication;
 
-use Auth0\SDK\API\Authentication;
-use Auth0\Tests\API\ApiTests;
+use ICANID\SDK\API\Authentication;
+use ICANID\Tests\API\ApiTests;
 
 class ClientCredentialsIntegrationTest extends ApiTests
 {

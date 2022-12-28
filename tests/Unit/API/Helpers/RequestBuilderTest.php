@@ -1,9 +1,9 @@
 <?php
-namespace Auth0\Tests\unit\API\Helpers;
+namespace ICANID\Tests\unit\API\Helpers;
 
-use Auth0\SDK\API\Helpers\RequestBuilder;
-use Auth0\Tests\API\ApiTests;
-use Auth0\Tests\unit\API\Management\MockManagementApi;
+use ICANID\SDK\API\Helpers\RequestBuilder;
+use ICANID\Tests\API\ApiTests;
+use ICANID\Tests\unit\API\Management\MockManagementApi;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
@@ -11,9 +11,9 @@ use GuzzleHttp\Psr7\Response;
 
 /**
  * Class RequestBuilderTest
- * Tests the Auth0\SDK\API\Helpers\RequestBuilder class.
+ * Tests the ICANID\SDK\API\Helpers\RequestBuilder class.
  *
- * @package Auth0\Tests\unit\API\Helpers
+ * @package ICANID\Tests\unit\API\Helpers
  */
 class RequestBuilderTest extends ApiTests
 {

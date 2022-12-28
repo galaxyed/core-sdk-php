@@ -1,16 +1,16 @@
 <?php
-namespace Auth0\Tests\unit\API\Authentication;
+namespace ICANID\Tests\unit\API\Authentication;
 
-use Auth0\SDK\API\Helpers\InformationHeaders;
-use Auth0\Tests\API\ApiTests;
-use Auth0\Tests\Traits\ErrorHelpers;
+use ICANID\SDK\API\Helpers\InformationHeaders;
+use ICANID\Tests\API\ApiTests;
+use ICANID\Tests\Traits\ErrorHelpers;
 use GuzzleHttp\Psr7\Response;
 
 /**
  * Class PasswordlessTest
  * Tests the Authentication API class, specifically passwordless grants.
  *
- * @package Auth0\Tests\unit\API\Authentication
+ * @package ICANID\Tests\unit\API\Authentication
  */
 class PasswordlessTest extends ApiTests
 {
@@ -47,8 +47,8 @@ class PasswordlessTest extends ApiTests
         $this->assertEquals( 'https://test-domain.auth0.com/passwordless/start', $api->getHistoryUrl() );
 
         $request_headers = $api->getHistoryHeaders();
-        $this->assertArrayHasKey( 'Auth0-Client', $request_headers );
-        $this->assertEquals( self::$expectedTelemetry, $request_headers['Auth0-Client'][0] );
+        $this->assertArrayHasKey( 'ICANID-Client', $request_headers );
+        $this->assertEquals( self::$expectedTelemetry, $request_headers['ICANID-Client'][0] );
         $this->assertArrayHasKey( 'Content-Type', $request_headers );
         $this->assertEquals( 'application/json', $request_headers['Content-Type'][0] );
 
@@ -87,8 +87,8 @@ class PasswordlessTest extends ApiTests
         $this->assertEquals( 'https://test-domain.auth0.com/passwordless/start', $api->getHistoryUrl() );
 
         $request_headers = $api->getHistoryHeaders();
-        $this->assertArrayHasKey( 'Auth0-Client', $request_headers );
-        $this->assertEquals( self::$expectedTelemetry, $request_headers['Auth0-Client'][0] );
+        $this->assertArrayHasKey( 'ICANID-Client', $request_headers );
+        $this->assertEquals( self::$expectedTelemetry, $request_headers['ICANID-Client'][0] );
         $this->assertArrayHasKey( 'Content-Type', $request_headers );
         $this->assertEquals( 'application/json', $request_headers['Content-Type'][0] );
 

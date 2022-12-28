@@ -1,14 +1,14 @@
 <?php
 
-namespace Auth0\SDK\API\Management;
+namespace ICANID\SDK\API\Management;
 
-use Auth0\SDK\Exception\EmptyOrInvalidParameterException;
+use ICANID\SDK\Exception\EmptyOrInvalidParameterException;
 
 /**
  * Class LogStreams.
  * Access to the v2 Management API Log Streams endpoint.
  *
- * @package Auth0\SDK\API\Management
+ * @package ICANID\SDK\API\Management
  */
 class LogStreams extends GenericResource
 {

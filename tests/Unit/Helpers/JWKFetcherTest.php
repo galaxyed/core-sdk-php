@@ -1,23 +1,23 @@
 <?php
-namespace Auth0\Tests\unit\Helpers;
+namespace ICANID\Tests\unit\Helpers;
 
-use Auth0\SDK\Helpers\JWKFetcher;
+use ICANID\SDK\Helpers\JWKFetcher;
 use Cache\Adapter\PHPArray\ArrayCachePool;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
-use Auth0\SDK\Exception\CoreException;
+use ICANID\SDK\Exception\CoreException;
 
 /**
  * Class JWKFetcherTest.
  *
- * @package Auth0\Tests\unit\Helpers\Cache
+ * @package ICANID\Tests\unit\Helpers\Cache
  */
 class JWKFetcherTest extends TestCase
 {
 
     public function testThatGetKeysReturnsKeys()
     {
-        $test_jwks = file_get_contents( AUTH0_PHP_TEST_JSON_DIR.'localhost--well-known-jwks-json.json' );
+        $test_jwks = file_get_contents( ICANID_PHP_TEST_JSON_DIR.'localhost--well-known-jwks-json.json' );
         $jwks      = new MockJwks( [ new Response( 200, [ 'Content-Type' => 'application/json' ], $test_jwks ) ] );
 
         $jwks_formatted = $jwks->call()->getKeys( uniqid() );

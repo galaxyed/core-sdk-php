@@ -1,38 +1,38 @@
 <?php
 /**
- * Main entry point to the Auth0 SDK
+ * Main entry point to the ICANID SDK
  *
- * @package Auth0\SDK
+ * @package ICANID\SDK
  */
 
-namespace Auth0\SDK;
+namespace ICANID\SDK;
 
-use Auth0\SDK\Exception\CoreException;
-use Auth0\SDK\Exception\ApiException;
-use Auth0\SDK\Exception\InvalidTokenException;
-use Auth0\SDK\Helpers\Cache\NoCacheHandler;
-use Auth0\SDK\Helpers\JWKFetcher;
-use Auth0\SDK\Helpers\PKCE;
-use Auth0\SDK\Helpers\Tokens\IdTokenVerifier;
-use Auth0\SDK\Helpers\Tokens\AsymmetricVerifier;
-use Auth0\SDK\Helpers\Tokens\SymmetricVerifier;
-use Auth0\SDK\Helpers\TransientStoreHandler;
-use Auth0\SDK\Store\CookieStore;
-use Auth0\SDK\Store\EmptyStore;
-use Auth0\SDK\Store\SessionStore;
-use Auth0\SDK\Store\StoreInterface;
-use Auth0\SDK\API\Authentication;
+use ICANID\SDK\Exception\CoreException;
+use ICANID\SDK\Exception\ApiException;
+use ICANID\SDK\Exception\InvalidTokenException;
+use ICANID\SDK\Helpers\Cache\NoCacheHandler;
+use ICANID\SDK\Helpers\JWKFetcher;
+use ICANID\SDK\Helpers\PKCE;
+use ICANID\SDK\Helpers\Tokens\IdTokenVerifier;
+use ICANID\SDK\Helpers\Tokens\AsymmetricVerifier;
+use ICANID\SDK\Helpers\Tokens\SymmetricVerifier;
+use ICANID\SDK\Helpers\TransientStoreHandler;
+use ICANID\SDK\Store\CookieStore;
+use ICANID\SDK\Store\EmptyStore;
+use ICANID\SDK\Store\SessionStore;
+use ICANID\SDK\Store\StoreInterface;
+use ICANID\SDK\API\Authentication;
 
 use GuzzleHttp\Exception\RequestException;
 use Psr\SimpleCache\CacheInterface;
 
 /**
- * Class Auth0
- * Provides access to Auth0 authentication functionality.
+ * Class ICANID
+ * Provides access to ICANID authentication functionality.
  *
- * @package Auth0\SDK
+ * @package ICANID\SDK
  */
-class Auth0
+class ICANID
 {
     const TRANSIENT_STATE_KEY         = 'state';
     const TRANSIENT_NONCE_KEY         = 'nonce';
@@ -51,21 +51,21 @@ class Auth0
     ];
 
     /**
-     * Auth0 Domain, found in Application settings
+     * ICANID Domain, found in Application settings
      *
      * @var string
      */
     protected $domain;
 
     /**
-     * Auth0 Client ID, found in Application settings
+     * ICANID Client ID, found in Application settings
      *
      * @var string
      */
     protected $clientId;
 
     /**
-     * Auth0 Client Secret, found in Application settings
+     * ICANID Client Secret, found in Application settings
      *
      * @var string
      */
@@ -93,7 +93,7 @@ class Auth0
     protected $audience;
 
     /**
-     * Auth0 Organization ID, found in your Organization settings.
+     * ICANID Organization ID, found in your Organization settings.
      * Used for generating log in urls and validating token claims.
      *
      * @var string
@@ -108,7 +108,7 @@ class Auth0
     protected $scope = 'openid offline';
 
     /**
-     * Auth0 Refresh Token
+     * ICANID Refresh Token
      *
      * @var string
      */
@@ -151,7 +151,7 @@ class Auth0
     protected $store;
 
     /**
-     * The user object provided by Auth0
+     * The user object provided by ICANID
      *
      * @var string
      */
@@ -160,7 +160,7 @@ class Auth0
     /**
      * Authentication Client.
      *
-     * @var \Auth0\SDK\API\Authentication
+     * @var \ICANID\SDK\API\Authentication
      */
     protected $authentication;
 
@@ -231,10 +231,10 @@ class Auth0
     protected $cacheHandler;
 
     /**
-     * BaseAuth0 Constructor.
+     * BaseICANID Constructor.
      *
      * @param array $config - Required configuration options.
-     *     - domain                 (String)  Required. Auth0 domain for your tenant
+     *     - domain                 (String)  Required. ICANID domain for your tenant
      *     - client_id              (String)  Required. Client ID found in the Application settings
      *     - redirect_uri           (String)  Required. Authentication callback URI
      *     - client_secret          (String)  Optional. Client Secret found in the Application settings
@@ -267,17 +267,17 @@ class Auth0
      */
     public function __construct(array $config)
     {
-        $this->domain = $config['domain'] ?? $_ENV['AUTH0_DOMAIN'] ?? null;
+        $this->domain = $config['domain'] ?? $_ENV['ICANID_DOMAIN'] ?? null;
         if (empty($this->domain)) {
             throw new CoreException('Invalid domain');
         }
 
-        $this->clientId = $config['client_id'] ?? $_ENV['AUTH0_CLIENT_ID'] ?? null;
+        $this->clientId = $config['client_id'] ?? $_ENV['ICANID_CLIENT_ID'] ?? null;
         if (empty($this->clientId)) {
             throw new CoreException('Invalid client_id');
         }
 
-        $this->redirectUri = $config['redirect_uri'] ?? $_ENV['AUTH0_REDIRECT_URI'] ?? null;
+        $this->redirectUri = $config['redirect_uri'] ?? $_ENV['ICANID_REDIRECT_URI'] ?? null;
         if (empty($this->redirectUri)) {
             throw new CoreException('Invalid redirect_uri');
         }
@@ -287,12 +287,12 @@ class Auth0
             $this->clientSecret = self::urlSafeBase64Decode($this->clientSecret);
         }
 
-        $clientSecretAuthenticationMethod = $config['client_secret_authentication_method'] ?? $_ENV['AUTH0_CLIENT_SECRET_AUTHENTICATION_METHOD'] ?? 'client_secret_post';
+        $clientSecretAuthenticationMethod = $config['client_secret_authentication_method'] ?? $_ENV['ICANID_CLIENT_SECRET_AUTHENTICATION_METHOD'] ?? 'client_secret_post';
         if (empty($clientSecretAuthenticationMethod)) {
             throw new CoreException('Invalid client_secret_authentication_method');
         }
 
-        $this->organization = $config['organization'] ?? $_ENV['AUTH0_ORGANIZATION'] ?? null;
+        $this->organization = $config['organization'] ?? $_ENV['ICANID_ORGANIZATION'] ?? null;
 
         $this->audience      = $config['audience'] ?? null;
         $this->responseMode  = $config['response_mode'] ?? 'query';
@@ -381,7 +381,7 @@ class Auth0
      *
      * @return void
      *
-     * @see \Auth0\SDK\API\Authentication::get_authorize_link()
+     * @see \ICANID\SDK\API\Authentication::get_authorize_link()
      * @see https://auth0.com/docs/api/authentication#login
      */
     public function login($state = null, $connection = null, array $additionalParams = [])
@@ -446,7 +446,7 @@ class Auth0
             $codeVerifier                  = PKCE::generateCodeVerifier(128);
             $auth_params['code_challenge'] = PKCE::generateCodeChallenge($codeVerifier);
             // The PKCE spec defines two methods, S256 and plain, the former is
-            // the only one supported by Auth0 since the latter is discouraged.
+            // the only one supported by ICANID since the latter is discouraged.
             $auth_params['code_challenge_method'] = 'S256';
             $this->transientHandler->store(self::TRANSIENT_CODE_VERIFIER_KEY, $codeVerifier);
         }
@@ -608,8 +608,8 @@ class Auth0
      * @param array $options Options for the token endpoint request.
      *      - options.scope         Access token scope requested; optional.
      *
-     * @throws CoreException If the Auth0 object does not have access token and refresh token
-     * @throws ApiException If the Auth0 API did not renew access and ID token properly
+     * @throws CoreException If the ICANID object does not have access token and refresh token
+     * @throws ApiException If the ICANID API did not renew access and ID token properly
      * @link   https://auth0.com/docs/tokens/refresh-token/current
      */
     public function renewTokens(array $options = [])
@@ -634,7 +634,7 @@ class Auth0
     /**
      * Set the user property to a userinfo array and, if configured, persist
      *
-     * @param array $user - userinfo from Auth0.
+     * @param array $user - userinfo from ICANID.
      *
      * @return $this
      */
@@ -653,7 +653,7 @@ class Auth0
      *
      * @param string $accessToken - access token returned from the code exchange.
      *
-     * @return \Auth0\SDK\Auth0
+     * @return \ICANID\SDK\ICANID
      */
     public function setAccessToken($accessToken)
     {
@@ -670,7 +670,7 @@ class Auth0
      *
      * @param string $idToken - ID token returned from the code exchange.
      *
-     * @return \Auth0\SDK\Auth0
+     * @return \ICANID\SDK\ICANID
      *
      * @throws CoreException
      * @throws InvalidTokenException
@@ -725,7 +725,7 @@ class Auth0
      *
      * @param string $refreshToken - refresh token returned from the code exchange.
      *
-     * @return \Auth0\SDK\Auth0
+     * @return \ICANID\SDK\ICANID
      */
     public function setRefreshToken($refreshToken)
     {
@@ -864,7 +864,7 @@ class Auth0
      *
      * @param StoreInterface $store - storage engine to use.
      *
-     * @return \Auth0\SDK\Auth0
+     * @return \ICANID\SDK\ICANID
      */
     public function setStore(StoreInterface $store)
     {

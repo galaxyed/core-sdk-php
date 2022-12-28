@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace Auth0\SDK\Helpers\Tokens;
+namespace ICANID\SDK\Helpers\Tokens;
 
 use Lcobucci\JWT\Signer\Hmac\Sha256 as HsSigner;
 use Lcobucci\JWT\Token;
@@ -9,7 +9,7 @@ use Lcobucci\JWT\Token;
 /**
  * Class SymmetricVerifier
  *
- * @package Auth0\SDK\Helpers
+ * @package ICANID\SDK\Helpers
  */
 final class SymmetricVerifier extends SignatureVerifier
 {

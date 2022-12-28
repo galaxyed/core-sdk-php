@@ -1,8 +1,8 @@
 <?php
-namespace Auth0\Tests\API;
+namespace ICANID\Tests\API;
 
-use Auth0\SDK\API\Authentication;
-use Auth0\Tests\Traits\ErrorHelpers;
+use ICANID\SDK\API\Authentication;
+use ICANID\Tests\Traits\ErrorHelpers;
 use josegonzalez\Dotenv\Loader;
 use PHPUnit\Framework\TestCase;
 
@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
  * Class ApiTests.
  * Extend to test API endpoints with a live or mock API.
  *
- * @package Auth0\Tests\API
+ * @package ICANID\Tests\API
  */
 class ApiTests extends TestCase
 {
@@ -28,7 +28,7 @@ class ApiTests extends TestCase
      *
      * @return array
      *
-     * @throws \Auth0\SDK\Exception\ApiException
+     * @throws \ICANID\SDK\Exception\ApiException
      */
     protected static function getEnv()
     {
@@ -50,11 +50,11 @@ class ApiTests extends TestCase
             'APP_CLIENT_ID'           => $env['APP_CLIENT_ID'] ?? false,
             'APP_CLIENT_SECRET'       => $env['APP_CLIENT_SECRET'] ?? false,
             'API_TOKEN'               => $env['API_TOKEN'] ?? false,
-            'AUTH0_API_REQUEST_DELAY' => (int) ($env['AUTH0_API_REQUEST_DELAY'] ?? 0),
+            'ICANID_API_REQUEST_DELAY' => (int) ($env['ICANID_API_REQUEST_DELAY'] ?? 0),
         ];
 
-        if (self::$env['AUTH0_API_REQUEST_DELAY'] <= 0) {
-            self::$env['AUTH0_API_REQUEST_DELAY'] = 200000;
+        if (self::$env['ICANID_API_REQUEST_DELAY'] <= 0) {
+            self::$env['ICANID_API_REQUEST_DELAY'] = 200000;
         }
 
         if (! isset($env['API_TOKEN']) && $env['APP_CLIENT_SECRET']) {
@@ -68,6 +68,6 @@ class ApiTests extends TestCase
 
     protected static function sleep(?int $microseconds = null)
     {
-        usleep($microseconds ?? self::$env['AUTH0_API_REQUEST_DELAY']);
+        usleep($microseconds ?? self::$env['ICANID_API_REQUEST_DELAY']);
     }
 }

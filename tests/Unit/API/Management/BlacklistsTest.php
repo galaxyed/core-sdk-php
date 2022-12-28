@@ -1,9 +1,9 @@
 <?php
-namespace Auth0\Tests\unit\API\Management;
+namespace ICANID\Tests\unit\API\Management;
 
-use Auth0\SDK\API\Helpers\InformationHeaders;
-use Auth0\SDK\API\Management;
-use Auth0\Tests\API\ApiTests;
+use ICANID\SDK\API\Helpers\InformationHeaders;
+use ICANID\SDK\API\Management;
+use ICANID\Tests\API\ApiTests;
 use GuzzleHttp\Psr7\Response;
 
 class BlacklistsTest extends ApiTests
@@ -49,7 +49,7 @@ class BlacklistsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     /**
@@ -73,7 +73,7 @@ class BlacklistsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
         $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
     }
 }

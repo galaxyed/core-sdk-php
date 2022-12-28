@@ -1,9 +1,9 @@
 <?php
-namespace Auth0\Tests\unit\API\Management;
+namespace ICANID\Tests\unit\API\Management;
 
-use Auth0\SDK\API\Helpers\InformationHeaders;
-use Auth0\SDK\Exception\EmptyOrInvalidParameterException;
-use Auth0\Tests\API\ApiTests;
+use ICANID\SDK\API\Helpers\InformationHeaders;
+use ICANID\SDK\Exception\EmptyOrInvalidParameterException;
+use ICANID\Tests\API\ApiTests;
 use GuzzleHttp\Psr7\Response;
 
 class JobsTest extends ApiTests
@@ -37,7 +37,7 @@ class JobsTest extends ApiTests
      */
     public static function setUpBeforeClass(): void
     {
-        self::$testImportUsersJsonPath = AUTH0_PHP_TEST_JSON_DIR.'test-import-users-file.json';
+        self::$testImportUsersJsonPath = ICANID_PHP_TEST_JSON_DIR.'test-import-users-file.json';
         $infoHeadersData               = new InformationHeaders;
         $infoHeadersData->setCorePackage();
         self::$expectedTelemetry = $infoHeadersData->build();
@@ -57,7 +57,7 @@ class JobsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     /**
@@ -74,7 +74,7 @@ class JobsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     /**
@@ -99,7 +99,7 @@ class JobsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
         $this->assertStringStartsWith( 'multipart/form-data', $headers['Content-Type'][0] );
 
         $form_body     = $api->getHistoryBodyAsString();
@@ -215,7 +215,7 @@ class JobsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
         $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
     }
 

@@ -1,7 +1,7 @@
 <?php
-namespace Auth0\Tests\unit\API\Authentication;
+namespace ICANID\Tests\unit\API\Authentication;
 
-use Auth0\SDK\API\Authentication;
+use ICANID\SDK\API\Authentication;
 use PHPUnit\Framework\TestCase;
 
 class UrlBuildersTest extends TestCase
@@ -26,7 +26,7 @@ class UrlBuildersTest extends TestCase
         $this->assertStringNotContainsString('state=', $authorize_url_parts['query']);
 
         // Telemetry should not be added to any browser URLs.
-        $this->assertStringNotContainsString('auth0Client=', $authorize_url_parts['query']);
+        $this->assertStringNotContainsString('ICANIDClient=', $authorize_url_parts['query']);
     }
 
     public function testThatAuthorizeLinkIncludesConnection()
@@ -74,7 +74,7 @@ class UrlBuildersTest extends TestCase
         $this->assertEquals('/v2/logout', $logout_link_parts['path']);
 
         // Telemetry should not be added to browser URLs.
-        // If a query is added in the future, change this to check that auth0Client is not present.
+        // If a query is added in the future, change this to check that ICANIDClient is not present.
         $this->assertTrue( empty( $logout_link_parts['query'] ) );
     }
 

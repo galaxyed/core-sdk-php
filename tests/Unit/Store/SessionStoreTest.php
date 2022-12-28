@@ -1,7 +1,7 @@
 <?php
-namespace Auth0\Tests\Store;
+namespace ICANID\Tests\Store;
 
-use Auth0\SDK\Store\SessionStore;
+use ICANID\SDK\Store\SessionStore;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -18,7 +18,7 @@ class SessionStoreTest extends TestCase
     /**
      * Session value to test.
      */
-    const TEST_VALUE = '__Auth0__';
+    const TEST_VALUE = '__ICANID__';
 
     /**
      * Expected cookie lifetime of 1 week.
@@ -48,7 +48,7 @@ class SessionStoreTest extends TestCase
     public static function setUpBeforeClass(): void
     {
         self::$sessionStore = new SessionStore();
-        self::$sessionKey   = 'auth0__'.self::TEST_KEY;
+        self::$sessionKey   = 'icanid__'.self::TEST_KEY;
     }
 
     /**

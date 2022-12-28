@@ -1,6 +1,6 @@
 <?php
 
-namespace Auth0\SDK\API\Management;
+namespace ICANID\SDK\API\Management;
 
 class Tenants extends GenericResource
 {

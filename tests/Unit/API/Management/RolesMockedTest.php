@@ -1,17 +1,17 @@
 <?php
-namespace Auth0\Tests\unit\API\Management;
+namespace ICANID\Tests\unit\API\Management;
 
-use Auth0\SDK\API\Helpers\InformationHeaders;
-use Auth0\SDK\Exception\EmptyOrInvalidParameterException;
-use Auth0\SDK\Exception\InvalidPermissionsArrayException;
-use Auth0\Tests\Traits\ErrorHelpers;
+use ICANID\SDK\API\Helpers\InformationHeaders;
+use ICANID\SDK\Exception\EmptyOrInvalidParameterException;
+use ICANID\SDK\Exception\InvalidPermissionsArrayException;
+use ICANID\Tests\Traits\ErrorHelpers;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class RolesTestMocked.
  *
- * @package Auth0\Tests\unit\API\Management
+ * @package ICANID\Tests\unit\API\Management
  */
 class RolesTestMocked extends TestCase
 {
@@ -64,7 +64,7 @@ class RolesTestMocked extends TestCase
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     /**
@@ -107,7 +107,7 @@ class RolesTestMocked extends TestCase
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
         $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $body = $api->getHistoryBody();
         $this->assertArrayHasKey( 'name', $body );
@@ -155,7 +155,7 @@ class RolesTestMocked extends TestCase
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     /**
@@ -197,7 +197,7 @@ class RolesTestMocked extends TestCase
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     /**
@@ -240,7 +240,7 @@ class RolesTestMocked extends TestCase
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
         $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $body = $api->getHistoryBody();
         $this->assertArrayHasKey( 'name', $body );
@@ -289,7 +289,7 @@ class RolesTestMocked extends TestCase
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $query = $api->getHistoryQuery();
         $this->assertStringContainsString( 'page=3', $query );
@@ -391,7 +391,7 @@ class RolesTestMocked extends TestCase
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
         $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $body = $api->getHistoryBody();
         $this->assertArrayHasKey( 'permissions', $body );
@@ -488,7 +488,7 @@ class RolesTestMocked extends TestCase
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $body = $api->getHistoryBody();
         $this->assertArrayHasKey( 'permissions', $body );
@@ -544,7 +544,7 @@ class RolesTestMocked extends TestCase
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $query = '&' . $api->getHistoryQuery();
         $this->assertStringContainsString( '&per_page=6', $query );
@@ -624,7 +624,7 @@ class RolesTestMocked extends TestCase
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
         $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $body = $api->getHistoryBody();
         $this->assertArrayHasKey( 'users', $body );

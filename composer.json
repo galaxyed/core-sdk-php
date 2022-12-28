@@ -29,12 +29,12 @@
   },
   "autoload": {
     "psr-4": {
-      "Auth0\\SDK\\": "src/"
+      "ICANID\\SDK\\": "src/"
     }
   },
   "autoload-dev": {
     "psr-4": {
-      "Auth0\\Tests\\": "tests/"
+      "ICANID\\Tests\\": "tests/"
     }
   },
   "scripts": {

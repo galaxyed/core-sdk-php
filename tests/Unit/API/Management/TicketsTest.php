@@ -1,10 +1,10 @@
 <?php
 
-namespace Auth0\Tests\unit\API\Management;
+namespace ICANID\Tests\unit\API\Management;
 
-use Auth0\SDK\API\Helpers\InformationHeaders;
-use Auth0\SDK\Exception\EmptyOrInvalidParameterException;
-use Auth0\Tests\API\ApiTests;
+use ICANID\SDK\API\Helpers\InformationHeaders;
+use ICANID\SDK\Exception\EmptyOrInvalidParameterException;
+use ICANID\Tests\API\ApiTests;
 use GuzzleHttp\Psr7\Response;
 
 use function PHPSTORM_META\map;
@@ -67,7 +67,7 @@ class TicketsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
         $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
     }
 
@@ -204,7 +204,7 @@ class TicketsTest extends ApiTests
         $headers = $api->getHistoryHeaders();
 
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
         $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
     }
 
@@ -385,7 +385,7 @@ class TicketsTest extends ApiTests
         $headers = $api->getHistoryHeaders();
 
         $this->assertEquals('Bearer __api_token__', $headers['Authorization'][0]);
-        $this->assertEquals(self::$expectedTelemetry, $headers['Auth0-Client'][0]);
+        $this->assertEquals(self::$expectedTelemetry, $headers['ICANID-Client'][0]);
         $this->assertEquals('application/json', $headers['Content-Type'][0]);
     }
 
@@ -445,7 +445,7 @@ class TicketsTest extends ApiTests
         $headers = $api->getHistoryHeaders();
 
         $this->assertEquals('Bearer __api_token__', $headers['Authorization'][0]);
-        $this->assertEquals(self::$expectedTelemetry, $headers['Auth0-Client'][0]);
+        $this->assertEquals(self::$expectedTelemetry, $headers['ICANID-Client'][0]);
         $this->assertEquals('application/json', $headers['Content-Type'][0]);
     }
 }

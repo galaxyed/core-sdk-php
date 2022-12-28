@@ -1,20 +1,20 @@
 <?php
 
-namespace Auth0\Tests\integration\API\Management;
+namespace ICANID\Tests\integration\API\Management;
 
-use Auth0\SDK\API\Management;
-use Auth0\Tests\API\ApiTests;
+use ICANID\SDK\API\Management;
+use ICANID\Tests\API\ApiTests;
 
 /**
  * Class ClientsTest
  *
- * @package Auth0\Tests\integration\API\Management
+ * @package ICANID\Tests\integration\API\Management
  */
 class ClientsIntegrationTest extends ApiTests
 {
 
     /**
-     * @throws \Auth0\SDK\Exception\ApiException
+     * @throws \ICANID\SDK\Exception\ApiException
      * @throws \Exception
      */
     public function testIntegrationCreateGetUpdateDelete()

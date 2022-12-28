@@ -1,13 +1,13 @@
 <?php
 
 
-namespace Auth0\Tests\unit\API\Management;
+namespace ICANID\Tests\unit\API\Management;
 
 
-use Auth0\SDK\API\Helpers\InformationHeaders;
-use Auth0\SDK\Exception\EmptyOrInvalidParameterException;
+use ICANID\SDK\API\Helpers\InformationHeaders;
+use ICANID\SDK\Exception\EmptyOrInvalidParameterException;
 use GuzzleHttp\Psr7\Response;
-use Auth0\Tests\API\ApiTests;
+use ICANID\Tests\API\ApiTests;
 
 class LogStreamsTest extends ApiTests
 {
@@ -46,7 +46,7 @@ class LogStreamsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     public function testThatGetLogStreamRequestIsFormedProperly()
@@ -60,7 +60,7 @@ class LogStreamsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     public function testThatGetLogStreamWithEmptyIdThrowsException()
@@ -98,7 +98,7 @@ class LogStreamsTest extends ApiTests
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
         $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $body = $api->getHistoryBody();
         $this->assertArrayHasKey( 'name', $body );
@@ -197,7 +197,7 @@ class LogStreamsTest extends ApiTests
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
         $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $body = $api->getHistoryBody();
         $this->assertArrayHasKey( 'name', $body );
@@ -230,7 +230,7 @@ class LogStreamsTest extends ApiTests
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
         $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     public function testThatDeleteLogStreamRequestWithEmptyIdThrowsException()

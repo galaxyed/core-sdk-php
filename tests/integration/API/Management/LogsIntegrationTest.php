@@ -1,15 +1,15 @@
 <?php
 
-namespace Auth0\Tests\integration\API\Management;
+namespace ICANID\Tests\integration\API\Management;
 
-use Auth0\SDK\API\Management;
-use Auth0\Tests\API\ApiTests;
+use ICANID\SDK\API\Management;
+use ICANID\Tests\API\ApiTests;
 
 /**
  * Class LogsIntegrationTest.
- * Tests the Auth0\SDK\API\Management\Logs class.
+ * Tests the ICANID\SDK\API\Management\Logs class.
  *
- * @package Auth0\Tests\integration\API\Management
+ * @package ICANID\Tests\integration\API\Management
  */
 class LogsIntegrationTest extends ApiTests
 {
@@ -26,7 +26,7 @@ class LogsIntegrationTest extends ApiTests
      *
      * @return void
      *
-     * @throws \Auth0\SDK\Exception\ApiException
+     * @throws \ICANID\SDK\Exception\ApiException
      */
     public static function setUpBeforeClass(): void
     {

@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace Auth0\SDK\API\Helpers;
+namespace ICANID\SDK\API\Helpers;
 
 /**
  * Class InformationHeaders
  * Builds, extends, modifies, and formats SDK telemetry data.
  *
- * @package Auth0\SDK\API\Helpers
+ * @package ICANID\SDK\API\Helpers
  */
 class InformationHeaders
 {
@@ -40,7 +40,7 @@ class InformationHeaders
      */
     public function setCorePackage() : void
     {
-        $this->setPackage('auth0-php', ApiClient::API_VERSION);
+        $this->setPackage('icanid-php', ApiClient::API_VERSION);
         $this->setEnvProperty('php', phpversion());
     }
 

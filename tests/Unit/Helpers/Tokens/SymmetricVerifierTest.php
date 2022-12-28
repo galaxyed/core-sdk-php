@@ -1,8 +1,8 @@
 <?php
-namespace Auth0\Tests\unit\Helpers\Tokens;
+namespace ICANID\Tests\unit\Helpers\Tokens;
 
-use Auth0\SDK\Exception\InvalidTokenException;
-use Auth0\SDK\Helpers\Tokens\SymmetricVerifier;
+use ICANID\SDK\Exception\InvalidTokenException;
+use ICANID\SDK\Helpers\Tokens\SymmetricVerifier;
 use Lcobucci\JWT\Builder;
 use Lcobucci\JWT\Signer\Key;
 use Lcobucci\JWT\Signer\Hmac\Sha256 as HsSigner;
@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Class SymmetricVerifierTest.
  *
- * @package Auth0\Tests\unit\Helpers\Tokens
+ * @package ICANID\Tests\unit\Helpers\Tokens
  */
 class SymmetricVerifierTest extends TestCase
 {

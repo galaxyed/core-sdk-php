@@ -1,13 +1,13 @@
 <?php
-namespace Auth0\Tests\unit\API\Authentication;
+namespace ICANID\Tests\unit\API\Authentication;
 
-use Auth0\SDK\API\Authentication;
-use Auth0\Tests\unit\MockApi;
+use ICANID\SDK\API\Authentication;
+use ICANID\Tests\unit\MockApi;
 
 /**
  * Class MockAuthenticationApi
  *
- * @package Auth0\Tests\unit\API\Authentication
+ * @package ICANID\Tests\unit\API\Authentication
  */
 class MockAuthenticationApi extends MockApi
 {

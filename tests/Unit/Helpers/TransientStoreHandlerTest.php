@@ -1,14 +1,14 @@
 <?php
-namespace Auth0\Tests\unit\Helpers;
+namespace ICANID\Tests\unit\Helpers;
 
-use Auth0\SDK\Helpers\TransientStoreHandler;
-use Auth0\SDK\Store\SessionStore;
+use ICANID\SDK\Helpers\TransientStoreHandler;
+use ICANID\SDK\Store\SessionStore;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class TransientStoreHandlerTest
  *
- * @package Auth0\Tests\unit\Helpers
+ * @package ICANID\Tests\unit\Helpers
  */
 class TransientStoreHandlerTest extends TestCase
 {

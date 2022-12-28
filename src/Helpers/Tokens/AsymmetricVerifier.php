@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-namespace Auth0\SDK\Helpers\Tokens;
+namespace ICANID\SDK\Helpers\Tokens;
 
-use Auth0\SDK\Exception\InvalidTokenException;
-use Auth0\SDK\Helpers\JWKFetcher;
+use ICANID\SDK\Exception\InvalidTokenException;
+use ICANID\SDK\Helpers\JWKFetcher;
 use Lcobucci\JWT\Signer\Key;
 use Lcobucci\JWT\Signer\Rsa\Sha256 as RsSigner;
 use Lcobucci\JWT\Token;
@@ -12,7 +12,7 @@ use Lcobucci\JWT\Token;
 /**
  * Class AsymmetricVerifier
  *
- * @package Auth0\SDK\Helpers
+ * @package ICANID\SDK\Helpers
  */
 final class AsymmetricVerifier extends SignatureVerifier
 {

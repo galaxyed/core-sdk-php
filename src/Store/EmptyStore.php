@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-namespace Auth0\SDK\Store;
+namespace ICANID\SDK\Store;
 
 /**
  * Class EmptyStore.
  * Used to fulfill an interface without providing actual storage.
  *
- * @package Auth0\SDK\Store
+ * @package ICANID\SDK\Store
  */
 class EmptyStore implements StoreInterface
 {

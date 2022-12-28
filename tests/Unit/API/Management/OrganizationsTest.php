@@ -1,21 +1,21 @@
 <?php
 
-namespace Auth0\Tests\unit\API\Management;
+namespace ICANID\Tests\unit\API\Management;
 
-use Auth0\SDK\API\Helpers\InformationHeaders;
-use Auth0\SDK\Exception\EmptyOrInvalidParameterException;
+use ICANID\SDK\API\Helpers\InformationHeaders;
+use ICANID\SDK\Exception\EmptyOrInvalidParameterException;
 use GuzzleHttp\Psr7\Response;
-use Auth0\Tests\API\ApiTests;
+use ICANID\Tests\API\ApiTests;
 
 /**
 * Class OrganizationsTest.
-* Tests the Auth0\SDK\API\Management\Organizations class.
+* Tests the ICANID\SDK\API\Management\Organizations class.
 *
 * @group unit
 * @group management
 * @group organizations
 *
-* @package Auth0\Tests\integration\API\Management
+* @package ICANID\Tests\integration\API\Management
 */
 class OrganizationsTest extends ApiTests
 {
@@ -64,7 +64,7 @@ class OrganizationsTest extends ApiTests
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
         $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $body = $api->getHistoryBody();
 
@@ -124,7 +124,7 @@ class OrganizationsTest extends ApiTests
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
         $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $body = $api->getHistoryBody();
 
@@ -172,7 +172,7 @@ class OrganizationsTest extends ApiTests
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
         $this->assertEquals( 'application/json', $headers['Content-Type'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     public function testThatDeleteOrganizationRequestWithEmptyIdThrowsException()
@@ -196,7 +196,7 @@ class OrganizationsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     public function testThatGetRequestIsFormedProperly()
@@ -210,7 +210,7 @@ class OrganizationsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     public function testThatGetWithEmptyIdThrowsException()
@@ -234,7 +234,7 @@ class OrganizationsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     public function testThatGetByNameWithEmptyIdThrowsException()
@@ -258,7 +258,7 @@ class OrganizationsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     public function testThatGetEnabledConnectionsWithEmptyIdThrowsException()
@@ -282,7 +282,7 @@ class OrganizationsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     public function testThatGetEnabledConnectionWithEmptyIdThrowsException()
@@ -316,7 +316,7 @@ class OrganizationsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $body = $api->getHistoryBody();
         $this->assertArrayHasKey( 'connection_id', $body );
@@ -354,7 +354,7 @@ class OrganizationsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $body = $api->getHistoryBody();
         $this->assertArrayHasKey( 'assign_membership_on_login', $body );
@@ -392,7 +392,7 @@ class OrganizationsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     public function testThatRemoveEnabledConnectionWithEmptyIdThrowsException()
@@ -426,7 +426,7 @@ class OrganizationsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     public function testThatGetMembersWithEmptyIdThrowsException()
@@ -450,7 +450,7 @@ class OrganizationsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $body = $api->getHistoryBody();
         $this->assertArrayHasKey( 'members', $body );
@@ -488,7 +488,7 @@ class OrganizationsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $body = $api->getHistoryBody();
         $this->assertArrayHasKey( 'members', $body );
@@ -526,7 +526,7 @@ class OrganizationsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     public function testThatGetMemberRolesWithEmptyIdThrowsException()
@@ -560,7 +560,7 @@ class OrganizationsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $body = $api->getHistoryBody();
         $this->assertArrayHasKey( 'roles', $body );
@@ -608,7 +608,7 @@ class OrganizationsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $body = $api->getHistoryBody();
         $this->assertArrayHasKey( 'roles', $body );
@@ -656,7 +656,7 @@ class OrganizationsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     public function testThatGetInvitationsWithEmptyIdThrowsException()
@@ -680,7 +680,7 @@ class OrganizationsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     public function testThatGetInvitationWithEmptyIdThrowsException()
@@ -719,7 +719,7 @@ class OrganizationsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $body = $api->getHistoryBody();
         $this->assertArrayHasKey( 'client_id', $body );
@@ -803,7 +803,7 @@ class OrganizationsTest extends ApiTests
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
     }
 
     public function testThatDeleteInvitationWithEmptyIdThrowsException()

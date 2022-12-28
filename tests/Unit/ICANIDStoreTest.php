@@ -1,29 +1,29 @@
 <?php
-namespace Auth0\Tests\unit;
+namespace ICANID\Tests\unit;
 
-use Auth0\SDK\Auth0;
-use Auth0\SDK\Exception\ApiException;
-use Auth0\SDK\Exception\CoreException;
-use Auth0\SDK\Exception\InvalidTokenException;
-use Auth0\SDK\Store\CookieStore;
-use Auth0\SDK\Store\EmptyStore;
-use Auth0\SDK\Store\SessionStore;
-use Auth0\SDK\Store\StoreInterface;
-use Auth0\Tests\Traits\ErrorHelpers;
+use ICANID\SDK\ICANID;
+use ICANID\SDK\Exception\ApiException;
+use ICANID\SDK\Exception\CoreException;
+use ICANID\SDK\Exception\InvalidTokenException;
+use ICANID\SDK\Store\CookieStore;
+use ICANID\SDK\Store\EmptyStore;
+use ICANID\SDK\Store\SessionStore;
+use ICANID\SDK\Store\StoreInterface;
+use ICANID\Tests\Traits\ErrorHelpers;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Class Auth0StoreTest
+ * Class ICANIDStoreTest
  *
- * @package Auth0\Tests\unit
+ * @package ICANID\Tests\unit
  */
-class Auth0StoreTest extends TestCase
+class ICANIDStoreTest extends TestCase
 {
 
     use ErrorHelpers;
 
     /**
-     * Basic Auth0 class config options.
+     * Basic ICANID class config options.
      *
      * @var array
      */
@@ -67,11 +67,11 @@ class Auth0StoreTest extends TestCase
             }
         };
 
-        $auth0 = new Auth0(self::$baseConfig + ['store' => $storeMock]);
-        $auth0->setUser(['sub' => '__test_user__']);
+        $icanid = new ICANID(self::$baseConfig + ['store' => $storeMock]);
+        $icanid->setUser(['sub' => '__test_user__']);
 
-        $auth0 = new Auth0(self::$baseConfig + ['store' => $storeMock]);
-        $this->assertEquals('__test_custom_store__user__', $auth0->getUser());
+        $icanid = new ICANID(self::$baseConfig + ['store' => $storeMock]);
+        $this->assertEquals('__test_custom_store__user__', $icanid->getUser());
     }
 
     /**
@@ -80,10 +80,10 @@ class Auth0StoreTest extends TestCase
      */
     public function testThatSessionStoreIsUsedAsDefault()
     {
-        $auth0 = new Auth0(self::$baseConfig);
-        $auth0->setUser(['sub' => '__test_user__']);
+        $icanid = new ICANID(self::$baseConfig);
+        $icanid->setUser(['sub' => '__test_user__']);
 
-        $this->assertEquals($_SESSION['auth0__user'], $auth0->getUser());
+        $this->assertEquals($_SESSION['icanid__user'], $icanid->getUser());
     }
 
     /**
@@ -92,26 +92,26 @@ class Auth0StoreTest extends TestCase
      */
     public function testThatSessionStoreIsUsedIfPassedIsInvalid()
     {
-        $auth0 = new Auth0(self::$baseConfig + ['store' => new \stdClass()]);
-        $auth0->setUser(['sub' => '__test_user__']);
+        $icanid = new ICANID(self::$baseConfig + ['store' => new \stdClass()]);
+        $icanid->setUser(['sub' => '__test_user__']);
 
-        $this->assertEquals($_SESSION['auth0__user'], $auth0->getUser());
+        $this->assertEquals($_SESSION['icanid__user'], $icanid->getUser());
     }
 
     public function testThatCookieStoreIsUsedAsDefaultTransient()
     {
-        $auth0 = new Auth0(self::$baseConfig);
-        @$auth0->getLoginUrl(['nonce' => '__test_cookie_nonce__']);
+        $icanid = new ICANID(self::$baseConfig);
+        @$icanid->getLoginUrl(['nonce' => '__test_cookie_nonce__']);
 
-        $this->assertEquals('__test_cookie_nonce__', $_COOKIE['auth0__nonce']);
+        $this->assertEquals('__test_cookie_nonce__', $_COOKIE['icanid__nonce']);
     }
 
     public function testThatTransientCanBeSetToAnotherStoreInterface()
     {
-        $auth0 = new Auth0(self::$baseConfig + ['transient_store' => new SessionStore()]);
-        @$auth0->getLoginUrl(['nonce' => '__test_session_nonce__']);
+        $icanid = new ICANID(self::$baseConfig + ['transient_store' => new SessionStore()]);
+        @$icanid->getLoginUrl(['nonce' => '__test_session_nonce__']);
 
-        $this->assertEquals('__test_session_nonce__', $_SESSION['auth0__nonce']);
+        $this->assertEquals('__test_session_nonce__', $_SESSION['icanid__nonce']);
     }
 
     /**
@@ -120,11 +120,11 @@ class Auth0StoreTest extends TestCase
      */
     public function testThatEmptyStoreInterfaceStoresNothing()
     {
-        $auth0 = new Auth0(self::$baseConfig + ['store' => new EmptyStore()]);
-        $auth0->setUser(['sub' => '__test_user__']);
+        $icanid = new ICANID(self::$baseConfig + ['store' => new EmptyStore()]);
+        $icanid->setUser(['sub' => '__test_user__']);
 
-        $auth0 = new Auth0(self::$baseConfig);
-        $this->assertNull($auth0->getUser());
+        $icanid = new ICANID(self::$baseConfig);
+        $this->assertNull($icanid->getUser());
     }
 
     /**
@@ -133,10 +133,10 @@ class Auth0StoreTest extends TestCase
      */
     public function testThatNoUserPersistenceUsesEmptyStore()
     {
-        $auth0 = new Auth0(self::$baseConfig + ['persist_user' => false]);
-        $auth0->setUser(['sub' => '__test_user__']);
+        $icanid = new ICANID(self::$baseConfig + ['persist_user' => false]);
+        $icanid->setUser(['sub' => '__test_user__']);
 
-        $auth0 = new Auth0(self::$baseConfig + ['persist_user' => false]);
-        $this->assertNull($auth0->getUser());
+        $icanid = new ICANID(self::$baseConfig + ['persist_user' => false]);
+        $this->assertNull($icanid->getUser());
     }
 }

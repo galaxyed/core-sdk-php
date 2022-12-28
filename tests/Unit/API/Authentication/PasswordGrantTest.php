@@ -1,18 +1,18 @@
 <?php
-namespace Auth0\Tests\unit\API\Authentication;
+namespace ICANID\Tests\unit\API\Authentication;
 
-use Auth0\SDK\API\Authentication;
-use Auth0\SDK\API\Helpers\InformationHeaders;
-use Auth0\SDK\Exception\ApiException;
-use Auth0\Tests\API\ApiTests;
-use Auth0\Tests\Traits\ErrorHelpers;
+use ICANID\SDK\API\Authentication;
+use ICANID\SDK\API\Helpers\InformationHeaders;
+use ICANID\SDK\Exception\ApiException;
+use ICANID\Tests\API\ApiTests;
+use ICANID\Tests\Traits\ErrorHelpers;
 use GuzzleHttp\Psr7\Response;
 
 /**
  * Class PasswordGrantTest
  * Tests the Authentication API class, specifically password grants.
  *
- * @package Auth0\Tests\unit\API\Authentication
+ * @package ICANID\Tests\unit\API\Authentication
  */
 class PasswordGrantTest extends ApiTests
 {
@@ -117,8 +117,8 @@ class PasswordGrantTest extends ApiTests
         $this->assertEquals( 'https://test-domain.auth0.com/oauth2/token', $api->getHistoryUrl() );
 
         $request_headers = $api->getHistoryHeaders();
-        $this->assertArrayHasKey( 'Auth0-Client', $request_headers );
-        $this->assertEquals( self::$expectedTelemetry, $request_headers['Auth0-Client'][0] );
+        $this->assertArrayHasKey( 'ICANID-Client', $request_headers );
+        $this->assertEquals( self::$expectedTelemetry, $request_headers['ICANID-Client'][0] );
         $this->assertArrayHasKey( 'Content-Type', $request_headers );
         $this->assertEquals( 'application/json', $request_headers['Content-Type'][0] );
 
@@ -175,18 +175,18 @@ class PasswordGrantTest extends ApiTests
         );
 
         $request_headers = $api->getHistoryHeaders();
-        $this->assertArrayHasKey( 'Auth0-Forwarded-For', $request_headers );
-        $this->assertEquals( '1.2.3.4', $request_headers['Auth0-Forwarded-For'][0] );
+        $this->assertArrayHasKey( 'ICANID-Forwarded-For', $request_headers );
+        $this->assertEquals( '1.2.3.4', $request_headers['ICANID-Forwarded-For'][0] );
 
         $api->call()->login_with_default_directory( [
             'username' => uniqid(),
             'password' => uniqid(),
-            'auth0_forwarded_for' => '1.2.3.4'
+            'icanid_forwarded_for' => '1.2.3.4'
         ] );
 
         $request_headers = $api->getHistoryHeaders();
-        $this->assertArrayHasKey( 'Auth0-Forwarded-For', $request_headers );
-        $this->assertEquals( '1.2.3.4', $request_headers['Auth0-Forwarded-For'][0] );
+        $this->assertArrayHasKey( 'ICANID-Forwarded-For', $request_headers );
+        $this->assertEquals( '1.2.3.4', $request_headers['ICANID-Forwarded-For'][0] );
     }
 
     /**
@@ -211,18 +211,18 @@ class PasswordGrantTest extends ApiTests
         );
 
         $request_headers = $api->getHistoryHeaders();
-        $this->assertArrayHasKey( 'Auth0-Forwarded-For', $request_headers );
-        $this->assertEquals( '5.6.7.8', $request_headers['Auth0-Forwarded-For'][0] );
+        $this->assertArrayHasKey( 'ICANID-Forwarded-For', $request_headers );
+        $this->assertEquals( '5.6.7.8', $request_headers['ICANID-Forwarded-For'][0] );
 
         $api->call()->login( [
             'username' => uniqid(),
             'password' => uniqid(),
             'realm' => uniqid(),
-            'auth0_forwarded_for' => '5.6.7.8'
+            'icanid_forwarded_for' => '5.6.7.8'
         ] );
 
         $request_headers = $api->getHistoryHeaders();
-        $this->assertArrayHasKey( 'Auth0-Forwarded-For', $request_headers );
-        $this->assertEquals( '5.6.7.8', $request_headers['Auth0-Forwarded-For'][0] );
+        $this->assertArrayHasKey( 'ICANID-Forwarded-For', $request_headers );
+        $this->assertEquals( '5.6.7.8', $request_headers['ICANID-Forwarded-For'][0] );
     }
 }

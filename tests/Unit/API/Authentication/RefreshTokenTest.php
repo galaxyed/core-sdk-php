@@ -1,17 +1,17 @@
 <?php
-namespace Auth0\Tests\unit\API\Authentication;
+namespace ICANID\Tests\unit\API\Authentication;
 
-use Auth0\SDK\API\Authentication;
-use Auth0\SDK\API\Helpers\InformationHeaders;
-use Auth0\SDK\Exception\ApiException;
-use Auth0\Tests\API\ApiTests;
+use ICANID\SDK\API\Authentication;
+use ICANID\SDK\API\Helpers\InformationHeaders;
+use ICANID\SDK\Exception\ApiException;
+use ICANID\Tests\API\ApiTests;
 use GuzzleHttp\Psr7\Response;
 
 /**
  * Class RefreshTokenTest.
- * Tests the \Auth0\SDK\API\Authentication::refresh_token() method.
+ * Tests the \ICANID\SDK\API\Authentication::refresh_token() method.
  *
- * @package Auth0\Tests\unit\API\Authentication
+ * @package ICANID\Tests\unit\API\Authentication
  */
 class RefreshTokenTest extends ApiTests
 {
@@ -110,7 +110,7 @@ class RefreshTokenTest extends ApiTests
         $this->assertEmpty( $api->getHistoryQuery() );
 
         $headers = $api->getHistoryHeaders();
-        $this->assertEquals( self::$expectedTelemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$expectedTelemetry, $headers['ICANID-Client'][0] );
 
         $request_body = $api->getHistoryBody();
         $this->assertEquals( 'refresh_token', $request_body['grant_type'] );

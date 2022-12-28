@@ -1,17 +1,17 @@
 <?php
 /**
  *
- * @package Auth0\SDK\API\Management
+ * @package ICANID\SDK\API\Management
  */
-namespace Auth0\SDK\API\Management;
+namespace ICANID\SDK\API\Management;
 
-use \Auth0\SDK\Exception\CoreException;
+use \ICANID\SDK\Exception\CoreException;
 
 /**
  * Class EmailTemplates.
  * Handles requests to the Email Templates endpoint of the v2 Management API.
  *
- * @package Auth0\SDK\API\Management\EmailTemplates
+ * @package ICANID\SDK\API\Management\EmailTemplates
  */
 class EmailTemplates extends GenericResource
 {

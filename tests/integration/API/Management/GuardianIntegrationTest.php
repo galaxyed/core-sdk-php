@@ -1,13 +1,13 @@
 <?php
-namespace Auth0\Tests\integration\API\Management;
+namespace ICANID\Tests\integration\API\Management;
 
-use Auth0\SDK\API\Management;
-use Auth0\Tests\API\ApiTests;
+use ICANID\SDK\API\Management;
+use ICANID\Tests\API\ApiTests;
 
 /**
  * Class GuardianTest.
  *
- * @package Auth0\Tests\integration\API\Management
+ * @package ICANID\Tests\integration\API\Management
  */
 class GuardianIntegrationTest extends ApiTests
 {

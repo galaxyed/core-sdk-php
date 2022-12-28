@@ -1,13 +1,13 @@
 <?php
-namespace Auth0\Tests\unit\Helpers;
+namespace ICANID\Tests\unit\Helpers;
 
-use Auth0\SDK\Helpers\PKCE;
+use ICANID\SDK\Helpers\PKCE;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class PKCETest
  *
- * @package Auth0\Tests\unit\Helpers
+ * @package ICANID\Tests\unit\Helpers
  */
 class PKCETest extends TestCase
 {

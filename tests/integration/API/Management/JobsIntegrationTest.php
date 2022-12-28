@@ -1,9 +1,9 @@
 <?php
-namespace Auth0\Tests\integration\API\Management;
+namespace ICANID\Tests\integration\API\Management;
 
-use Auth0\SDK\API\Helpers\InformationHeaders;
-use Auth0\SDK\API\Management;
-use Auth0\Tests\API\ApiTests;
+use ICANID\SDK\API\Helpers\InformationHeaders;
+use ICANID\SDK\API\Management;
+use ICANID\Tests\API\ApiTests;
 
 class JobsIntegrationTest extends ApiTests
 {
@@ -20,11 +20,11 @@ class JobsIntegrationTest extends ApiTests
      */
     public static function setUpBeforeClass(): void
     {
-        self::$testImportUsersJsonPath = AUTH0_PHP_TEST_JSON_DIR.'test-import-users-file.json';
+        self::$testImportUsersJsonPath = ICANID_PHP_TEST_JSON_DIR.'test-import-users-file.json';
     }
 
     /**
-     * @throws \Auth0\SDK\Exception\ApiException
+     * @throws \ICANID\SDK\Exception\ApiException
      * @throws \Exception
      */
     public function testIntegrationImportUsersJob()
@@ -39,7 +39,7 @@ class JobsIntegrationTest extends ApiTests
 
         // Get a single, active database connection.
         $default_db_name       = 'Username-Password-Authentication';
-        $get_connection_result = $api->connections()->getAll( 'auth0', ['id'], true, 0, 1, ['name' => $default_db_name] );
+        $get_connection_result = $api->connections()->getAll( 'icanid', ['id'], true, 0, 1, ['name' => $default_db_name] );
         $this->sleep();
 
         $conn_id            = $get_connection_result[0]['id'];
@@ -67,7 +67,7 @@ class JobsIntegrationTest extends ApiTests
     }
 
     /**
-     * @throws \Auth0\SDK\Exception\ApiException
+     * @throws \ICANID\SDK\Exception\ApiException
      * @throws \Exception
      */
     public function testIntegrationSendEmailVerificationJob()

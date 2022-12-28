@@ -1,5 +1,5 @@
 <?php
-namespace Auth0\SDK\API\Header;
+namespace ICANID\SDK\API\Header;
 
 class Telemetry extends Header
 {
@@ -11,6 +11,6 @@ class Telemetry extends Header
      */
     public function __construct($telemetryData)
     {
-        parent::__construct('Auth0-Client', $telemetryData);
+        parent::__construct('ICANID-Client', $telemetryData);
     }
 }

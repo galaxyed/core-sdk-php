@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace Auth0\SDK\Helpers\Tokens;
+namespace ICANID\SDK\Helpers\Tokens;
 
-use Auth0\SDK\Exception\InvalidTokenException;
+use ICANID\SDK\Exception\InvalidTokenException;
 
 /**
  * Class IdTokenVerifier, an OIDC-compliant ID token verifier.
  *
- * @package Auth0\SDK\Helpers\Tokens
+ * @package ICANID\SDK\Helpers\Tokens
  */
 final class IdTokenVerifier extends TokenVerifier
 {

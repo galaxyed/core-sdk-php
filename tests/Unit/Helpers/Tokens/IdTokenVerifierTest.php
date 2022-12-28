@@ -1,9 +1,9 @@
 <?php
-namespace Auth0\Tests\unit\Helpers\Tokens;
+namespace ICANID\Tests\unit\Helpers\Tokens;
 
-use Auth0\SDK\Exception\InvalidTokenException;
-use Auth0\SDK\Helpers\Tokens\IdTokenVerifier;
-use Auth0\SDK\Helpers\Tokens\SymmetricVerifier;
+use ICANID\SDK\Exception\InvalidTokenException;
+use ICANID\SDK\Helpers\Tokens\IdTokenVerifier;
+use ICANID\SDK\Helpers\Tokens\SymmetricVerifier;
 use Lcobucci\JWT\Builder;
 use PHPUnit\Framework\TestCase;
 

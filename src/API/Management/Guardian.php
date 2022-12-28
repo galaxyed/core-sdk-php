@@ -1,10 +1,10 @@
 <?php
-namespace Auth0\SDK\API\Management;
+namespace ICANID\SDK\API\Management;
 
 /**
  * Class Guardian
  *
- * @package Auth0\SDK\API\Management
+ * @package ICANID\SDK\API\Management
  */
 class Guardian extends GenericResource
 {

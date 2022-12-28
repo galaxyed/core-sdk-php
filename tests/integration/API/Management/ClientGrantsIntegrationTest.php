@@ -1,16 +1,16 @@
 <?php
 
-namespace Auth0\Tests\integration\API\Management;
+namespace ICANID\Tests\integration\API\Management;
 
-use Auth0\SDK\API\Management;
-use Auth0\SDK\Exception\CoreException;
-use Auth0\Tests\API\ApiTests;
+use ICANID\SDK\API\Management;
+use ICANID\SDK\Exception\CoreException;
+use ICANID\Tests\API\ApiTests;
 
 /**
  * Class ClientGrantsIntegrationTest.
- * Tests the Auth0\SDK\API\Management\ClientGrants class.
+ * Tests the ICANID\SDK\API\Management\ClientGrants class.
  *
- * @package Auth0\Tests\integration\API\Management
+ * @package ICANID\Tests\integration\API\Management
  */
 class ClientGrantsIntegrationTest extends ApiTests
 {
@@ -39,7 +39,7 @@ class ClientGrantsIntegrationTest extends ApiTests
 
     /**
      * @throws CoreException
-     * @throws \Auth0\SDK\Exception\ApiException
+     * @throws \ICANID\SDK\Exception\ApiException
      * @throws \Exception
      */
     public static function setUpBeforeClass(): void

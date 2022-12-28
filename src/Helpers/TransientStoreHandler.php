@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-namespace Auth0\SDK\Helpers;
+namespace ICANID\SDK\Helpers;
 
-use Auth0\SDK\Store\StoreInterface;
+use ICANID\SDK\Store\StoreInterface;
 
 /**
  * Class TransientStoreHandler
  *
- * @package Auth0\SDK\Helpers
+ * @package ICANID\SDK\Helpers
  */
 class TransientStoreHandler
 {

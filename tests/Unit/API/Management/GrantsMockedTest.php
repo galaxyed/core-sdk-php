@@ -1,17 +1,17 @@
 <?php
-namespace Auth0\Tests\unit\API\Management;
+namespace ICANID\Tests\unit\API\Management;
 
-use Auth0\SDK\API\Helpers\InformationHeaders;
-use Auth0\SDK\API\Management;
-use Auth0\SDK\Exception\CoreException;
-use Auth0\Tests\Traits\ErrorHelpers;
+use ICANID\SDK\API\Helpers\InformationHeaders;
+use ICANID\SDK\API\Management;
+use ICANID\SDK\Exception\CoreException;
+use ICANID\Tests\Traits\ErrorHelpers;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class GrantsTestMocked.
  *
- * @package Auth0\Tests\unit\API\Management
+ * @package ICANID\Tests\unit\API\Management
  */
 class GrantsTestMocked extends TestCase
 {
@@ -54,7 +54,7 @@ class GrantsTestMocked extends TestCase
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$telemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$telemetry, $headers['ICANID-Client'][0] );
     }
 
     /**
@@ -331,7 +331,7 @@ class GrantsTestMocked extends TestCase
 
         $headers = $api->getHistoryHeaders();
         $this->assertEquals( 'Bearer __api_token__', $headers['Authorization'][0] );
-        $this->assertEquals( self::$telemetry, $headers['Auth0-Client'][0] );
+        $this->assertEquals( self::$telemetry, $headers['ICANID-Client'][0] );
     }
 
     /**

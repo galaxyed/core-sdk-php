@@ -1,15 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace Auth0\SDK\Helpers\Tokens;
+namespace ICANID\SDK\Helpers\Tokens;
 
-use Auth0\SDK\Exception\InvalidTokenException;
+use ICANID\SDK\Exception\InvalidTokenException;
 
 /**
  * Class TokenVerifier, a generic JWT verifier.
- * For verifying OIDC-compliant ID tokens, use Auth0\SDK\Helpers\Tokens\IdTokenVerifier
+ * For verifying OIDC-compliant ID tokens, use ICANID\SDK\Helpers\Tokens\IdTokenVerifier
  *
- * @package Auth0\SDK\Helpers\Tokens
+ * @package ICANID\SDK\Helpers\Tokens
  */
 class TokenVerifier
 {

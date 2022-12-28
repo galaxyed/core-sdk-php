@@ -1,16 +1,16 @@
 <?php
-namespace Auth0\Tests\integration\API\Management;
+namespace ICANID\Tests\integration\API\Management;
 
-use Auth0\SDK\API\Helpers\InformationHeaders;
-use Auth0\SDK\API\Management;
-use Auth0\Tests\API\ApiTests;
+use ICANID\SDK\API\Helpers\InformationHeaders;
+use ICANID\SDK\API\Management;
+use ICANID\Tests\API\ApiTests;
 use GuzzleHttp\Psr7\Response;
 
 class BlacklistsIntegrationTest extends ApiTests
 {
 
     /**
-     * @throws \Auth0\SDK\Exception\ApiException
+     * @throws \ICANID\SDK\Exception\ApiException
      */
     public function testBlacklistAndGet()
     {

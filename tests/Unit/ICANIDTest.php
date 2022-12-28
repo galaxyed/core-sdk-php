@@ -1,14 +1,14 @@
 <?php
-namespace Auth0\Tests\unit;
+namespace ICANID\Tests\unit;
 
-use Auth0\SDK\Auth0;
-use Auth0\SDK\Exception\ApiException;
-use Auth0\SDK\Exception\CoreException;
-use Auth0\SDK\Exception\InvalidTokenException;
-use Auth0\SDK\Store\SessionStore;
-use Auth0\Tests\unit\Helpers\Tokens\AsymmetricVerifierTest;
-use Auth0\Tests\unit\Helpers\Tokens\SymmetricVerifierTest;
-use Auth0\Tests\Traits\ErrorHelpers;
+use ICANID\SDK\ICANID;
+use ICANID\SDK\Exception\ApiException;
+use ICANID\SDK\Exception\CoreException;
+use ICANID\SDK\Exception\InvalidTokenException;
+use ICANID\SDK\Store\SessionStore;
+use ICANID\Tests\unit\Helpers\Tokens\AsymmetricVerifierTest;
+use ICANID\Tests\unit\Helpers\Tokens\SymmetricVerifierTest;
+use ICANID\Tests\Traits\ErrorHelpers;
 use Cache\Adapter\PHPArray\ArrayCachePool;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
@@ -17,17 +17,17 @@ use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Class Auth0Test
+ * Class ICANIDTest
  *
- * @package Auth0\Tests\unit
+ * @package ICANID\Tests\unit
  */
-class Auth0Test extends TestCase
+class ICANIDTest extends TestCase
 {
 
     use ErrorHelpers;
 
     /**
-     * Basic Auth0 class config options.
+     * Basic ICANID class config options.
      *
      * @var array
      */
@@ -79,8 +79,8 @@ class Auth0Test extends TestCase
      */
     public function testThatExchangeReturnsFalseIfNoCodePresent()
     {
-        $auth0 = new Auth0( self::$baseConfig );
-        $this->assertFalse( $auth0->exchange() );
+        $icanid = new ICANID( self::$baseConfig );
+        $this->assertFalse( $icanid->exchange() );
     }
 
     /**
@@ -103,13 +103,13 @@ class Auth0Test extends TestCase
                 'handler' => HandlerStack::create($mock)
             ]
         ];
-        $auth0                    = new Auth0( self::$baseConfig + $add_config );
+        $icanid                    = new ICANID( self::$baseConfig + $add_config );
         $_GET['code']             = uniqid();
         $_GET['state']            = '__test_state__';
-        $_SESSION['auth0__state'] = '__test_state__';
+        $_SESSION['icanid__state'] = '__test_state__';
 
         $this->expectExceptionMessage('Nonce value not found in application store');
-        $auth0->exchange();
+        $icanid->exchange();
     }
 
     /**
@@ -123,16 +123,16 @@ class Auth0Test extends TestCase
         $add_config               = [
             'enable_pkce' => true,
         ];
-        $auth0                    = new Auth0( self::$baseConfig + $add_config );
+        $icanid                    = new ICANID( self::$baseConfig + $add_config );
 
         $_GET['code']             = uniqid();
         $_GET['state']            = '__test_state__';
-        $_SESSION['auth0__state'] = '__test_state__';
-        $_SESSION['auth0__code_verifier'] = null;
+        $_SESSION['icanid__state'] = '__test_state__';
+        $_SESSION['icanid__code_verifier'] = null;
 
         $this->expectException(CoreException::class);
         $this->expectExceptionMessage('Missing code_verifier');
-        $auth0->exchange();
+        $icanid->exchange();
     }
 
     /**
@@ -160,17 +160,17 @@ class Auth0Test extends TestCase
                 'handler' => HandlerStack::create($mock)
             ]
         ];
-        $auth0                    = new Auth0( self::$baseConfig + $add_config );
+        $icanid                    = new ICANID( self::$baseConfig + $add_config );
         $_GET['code']             = uniqid();
-        $_SESSION['auth0__nonce'] = '__test_nonce__';
+        $_SESSION['icanid__nonce'] = '__test_nonce__';
         $_GET['state']            = '__test_state__';
-        $_SESSION['auth0__state'] = '__test_state__';
+        $_SESSION['icanid__state'] = '__test_state__';
 
-        $this->assertTrue( $auth0->exchange() );
-        $this->assertEquals( ['sub' => '__test_sub__'], $auth0->getUser() );
-        $this->assertEquals( $id_token, $auth0->getIdToken() );
-        $this->assertEquals( '1.2.3', $auth0->getAccessToken() );
-        $this->assertEquals( '4.5.6', $auth0->getRefreshToken() );
+        $this->assertTrue( $icanid->exchange() );
+        $this->assertEquals( ['sub' => '__test_sub__'], $icanid->getUser() );
+        $this->assertEquals( $id_token, $icanid->getIdToken() );
+        $this->assertEquals( '1.2.3', $icanid->getAccessToken() );
+        $this->assertEquals( '4.5.6', $icanid->getRefreshToken() );
     }
 
     /**
@@ -195,15 +195,15 @@ class Auth0Test extends TestCase
             'audience' => 'https://api.identifier',
             'guzzle_options' => [ 'handler' => HandlerStack::create($mock) ]
         ];
-        $auth0                    = new Auth0( self::$baseConfig + $add_config );
+        $icanid                    = new ICANID( self::$baseConfig + $add_config );
         $_GET['code']             = uniqid();
         $_GET['state']            = '__test_state__';
-        $_SESSION['auth0__state'] = '__test_state__';
+        $_SESSION['icanid__state'] = '__test_state__';
 
-        $this->assertTrue( $auth0->exchange() );
-        $this->assertEquals( ['sub' => '123'], $auth0->getUser() );
-        $this->assertEquals( '1.2.3', $auth0->getAccessToken() );
-        $this->assertEquals( '4.5.6', $auth0->getRefreshToken() );
+        $this->assertTrue( $icanid->exchange() );
+        $this->assertEquals( ['sub' => '123'], $icanid->getUser() );
+        $this->assertEquals( '1.2.3', $icanid->getAccessToken() );
+        $this->assertEquals( '4.5.6', $icanid->getRefreshToken() );
     }
 
     /**
@@ -229,17 +229,17 @@ class Auth0Test extends TestCase
                 'handler' => HandlerStack::create($mock)
             ]
         ];
-        $auth0                            = new Auth0( self::$baseConfig + $add_config );
+        $icanid                            = new ICANID( self::$baseConfig + $add_config );
         $_GET['code']                     = uniqid();
-        $_SESSION['auth0__nonce']         = '__test_nonce__';
+        $_SESSION['icanid__nonce']         = '__test_nonce__';
         $_GET['state']                    = '__test_state__';
-        $_SESSION['auth0__state']         = '__test_state__';
-        $_SESSION['auth0__code_verifier'] = '__test_code_verifier__';
+        $_SESSION['icanid__state']         = '__test_state__';
+        $_SESSION['icanid__code_verifier'] = '__test_code_verifier__';
 
-        $this->assertTrue( $auth0->exchange() );
-        $this->assertEquals( ['sub' => '__test_sub__'], $auth0->getUser() );
-        $this->assertEquals( '1.2.3', $auth0->getAccessToken() );
-        $this->assertEquals( '4.5.6', $auth0->getRefreshToken() );
+        $this->assertTrue( $icanid->exchange() );
+        $this->assertEquals( ['sub' => '__test_sub__'], $icanid->getUser() );
+        $this->assertEquals( '1.2.3', $icanid->getAccessToken() );
+        $this->assertEquals( '4.5.6', $icanid->getRefreshToken() );
     }
 
     /**
@@ -265,16 +265,16 @@ class Auth0Test extends TestCase
                 'handler' => HandlerStack::create($mock)
             ]
         ];
-        $auth0                            = new Auth0( self::$baseConfig + $add_config );
+        $icanid                            = new ICANID( self::$baseConfig + $add_config );
         $_GET['code']                     = uniqid();
-        $_SESSION['auth0__nonce']         = '__test_nonce__';
+        $_SESSION['icanid__nonce']         = '__test_nonce__';
         $_GET['state']                    = '__test_state__';
-        $_SESSION['auth0__state']         = '__test_state__';
+        $_SESSION['icanid__state']         = '__test_state__';
 
-        $this->assertTrue( $auth0->exchange() );
-        $this->assertEquals( ['sub' => '__test_sub__'], $auth0->getUser() );
-        $this->assertEquals( '1.2.3', $auth0->getAccessToken() );
-        $this->assertEquals( '4.5.6', $auth0->getRefreshToken() );
+        $this->assertTrue( $icanid->exchange() );
+        $this->assertEquals( ['sub' => '__test_sub__'], $icanid->getUser() );
+        $this->assertEquals( '1.2.3', $icanid->getAccessToken() );
+        $this->assertEquals( '4.5.6', $icanid->getRefreshToken() );
     }
 
     /**
@@ -298,17 +298,17 @@ class Auth0Test extends TestCase
             'id_token_alg' => 'HS256',
             'guzzle_options' => [ 'handler' => HandlerStack::create($mock) ]
         ];
-        $auth0                    = new Auth0( self::$baseConfig + $add_config );
+        $icanid                    = new ICANID( self::$baseConfig + $add_config );
         $_GET['code']             = uniqid();
-        $_SESSION['auth0__nonce'] = '__test_nonce__';
+        $_SESSION['icanid__nonce'] = '__test_nonce__';
         $_GET['state']            = '__test_state__';
-        $_SESSION['auth0__state'] = '__test_state__';
+        $_SESSION['icanid__state'] = '__test_state__';
 
-        $this->assertTrue( $auth0->exchange() );
+        $this->assertTrue( $icanid->exchange() );
 
-        $this->assertEquals( '__test_sub__', $auth0->getUser()['sub'] );
-        $this->assertEquals( $id_token, $auth0->getIdToken() );
-        $this->assertEquals( '1.2.3', $auth0->getAccessToken() );
+        $this->assertEquals( '__test_sub__', $icanid->getUser()['sub'] );
+        $this->assertEquals( $id_token, $icanid->getIdToken() );
+        $this->assertEquals( '1.2.3', $icanid->getAccessToken() );
     }
 
     /**
@@ -329,17 +329,17 @@ class Auth0Test extends TestCase
             'persist_access_token' => true,
             'guzzle_options' => [ 'handler' => HandlerStack::create($mock) ]
         ];
-        $auth0      = new Auth0( self::$baseConfig + $add_config );
+        $icanid      = new ICANID( self::$baseConfig + $add_config );
 
         $_GET['code']             = uniqid();
         $_GET['state']            = '__test_state__';
-        $_SESSION['auth0__state'] = '__test_state__';
+        $_SESSION['icanid__state'] = '__test_state__';
 
-        $this->assertTrue( $auth0->exchange() );
+        $this->assertTrue( $icanid->exchange() );
 
         try {
             $caught_exception = false;
-            $auth0->renewTokens();
+            $icanid->renewTokens();
         } catch (CoreException $e) {
             $caught_exception = $this->errorHasString(
                 $e,
@@ -369,16 +369,16 @@ class Auth0Test extends TestCase
             'persist_access_token' => true,
             'guzzle_options' => [ 'handler' => HandlerStack::create($mock) ]
         ];
-        $auth0      = new Auth0( self::$baseConfig + $add_config );
+        $icanid      = new ICANID( self::$baseConfig + $add_config );
 
         $_GET['code']             = uniqid();
         $_GET['state']            = '__test_state__';
-        $_SESSION['auth0__state'] = '__test_state__';
+        $_SESSION['icanid__state'] = '__test_state__';
 
-        $this->assertTrue( $auth0->exchange() );
+        $this->assertTrue( $icanid->exchange() );
 
         $this->expectExceptionMessage('Token did not refresh correctly. Access token not returned.');
-        $auth0->renewTokens();
+        $icanid->renewTokens();
     }
 
     /**
@@ -407,22 +407,22 @@ class Auth0Test extends TestCase
             'persist_access_token' => true,
             'guzzle_options' => [ 'handler' => $handler ]
         ];
-        $auth0      = new Auth0( self::$baseConfig + $add_config );
+        $icanid      = new ICANID( self::$baseConfig + $add_config );
 
         $_GET['code']             = uniqid();
-        $_SESSION['auth0__nonce'] = '__test_nonce__';
+        $_SESSION['icanid__nonce'] = '__test_nonce__';
         $_GET['state']            = '__test_state__';
-        $_SESSION['auth0__state'] = '__test_state__';
+        $_SESSION['icanid__state'] = '__test_state__';
 
-        $this->assertTrue( $auth0->exchange() );
+        $this->assertTrue( $icanid->exchange() );
 
-        $this->assertArrayNotHasKey('auth0__nonce', $_SESSION);
-        $this->assertArrayNotHasKey('auth0__state', $_SESSION);
+        $this->assertArrayNotHasKey('icanid__nonce', $_SESSION);
+        $this->assertArrayNotHasKey('icanid__state', $_SESSION);
 
-        $auth0->renewTokens(['scope' => 'openid']);
+        $icanid->renewTokens(['scope' => 'openid']);
 
-        $this->assertEquals( '__test_access_token__', $auth0->getAccessToken() );
-        $this->assertEquals( $id_token, $auth0->getIdToken() );
+        $this->assertEquals( '__test_access_token__', $icanid->getAccessToken() );
+        $this->assertEquals( $id_token, $icanid->getIdToken() );
 
         $renew_request = $request_history[1]['request'];
         $renew_body    = json_decode($renew_request->getBody(), true);
@@ -435,9 +435,9 @@ class Auth0Test extends TestCase
 
     public function testThatGetLoginUrlUsesDefaultValues()
     {
-        $auth0 = new Auth0( self::$baseConfig );
+        $icanid = new ICANID( self::$baseConfig );
 
-        $parsed_url = parse_url( $auth0->getLoginUrl() );
+        $parsed_url = parse_url( $icanid->getLoginUrl() );
 
         $this->assertEquals( 'https', $parsed_url['scheme'] );
         $this->assertEquals( '__test_domain__', $parsed_url['host'] );
@@ -453,7 +453,7 @@ class Auth0Test extends TestCase
 
     public function testThatGetLoginUrlAddsValues()
     {
-        $auth0 = new Auth0( self::$baseConfig );
+        $icanid = new ICANID( self::$baseConfig );
 
         $custom_params = [
             'connection' => '__test_connection__',
@@ -463,7 +463,7 @@ class Auth0Test extends TestCase
             'invitation' => '__test_invitation__'
         ];
 
-        $auth_url         = $auth0->getLoginUrl( $custom_params );
+        $auth_url         = $icanid->getLoginUrl( $custom_params );
         $parsed_url_query = parse_url( $auth_url, PHP_URL_QUERY );
         $url_query        = explode( '&', $parsed_url_query );
 
@@ -478,7 +478,7 @@ class Auth0Test extends TestCase
 
     public function testThatGetLoginUrlOverridesDefaultValues()
     {
-        $auth0 = new Auth0( self::$baseConfig );
+        $icanid = new ICANID( self::$baseConfig );
 
         $override_params = [
             'scope' => 'openid offline',
@@ -486,7 +486,7 @@ class Auth0Test extends TestCase
             'response_mode' => 'form_post',
         ];
 
-        $auth_url         = $auth0->getLoginUrl( $override_params );
+        $auth_url         = $icanid->getLoginUrl( $override_params );
         $parsed_url_query = parse_url( $auth_url, PHP_URL_QUERY );
         $url_query        = explode( '&', $parsed_url_query );
 
@@ -501,17 +501,17 @@ class Auth0Test extends TestCase
     {
         $custom_config = self::$baseConfig;
 
-        $auth0 = new Auth0( $custom_config );
+        $icanid = new ICANID( $custom_config );
 
-        $auth_url = $auth0->getLoginUrl();
+        $auth_url = $icanid->getLoginUrl();
 
         $parsed_url_query = parse_url( $auth_url, PHP_URL_QUERY );
         $url_query        = explode( '&', $parsed_url_query );
 
-        $this->assertArrayHasKey( 'auth0__state', $_SESSION );
-        $this->assertContains( 'state='.$_SESSION['auth0__state'], $url_query );
-        $this->assertArrayHasKey( 'auth0__nonce', $_SESSION );
-        $this->assertContains( 'nonce='.$_SESSION['auth0__nonce'], $url_query );
+        $this->assertArrayHasKey( 'icanid__state', $_SESSION );
+        $this->assertContains( 'state='.$_SESSION['icanid__state'], $url_query );
+        $this->assertArrayHasKey( 'icanid__nonce', $_SESSION );
+        $this->assertContains( 'nonce='.$_SESSION['icanid__nonce'], $url_query );
     }
 
     public function testThatGetLoginUrlGeneratesChallengeAndChallengeMethodWhenPkceIsEnabled()
@@ -519,27 +519,27 @@ class Auth0Test extends TestCase
         $add_config = [
             'enable_pkce' =>  true,
         ];
-        $auth0 = new Auth0( self::$baseConfig + $add_config );
+        $icanid = new ICANID( self::$baseConfig + $add_config );
 
-        $auth_url = $auth0->getLoginUrl();
+        $auth_url = $icanid->getLoginUrl();
 
         $parsed_url_query = parse_url( $auth_url, PHP_URL_QUERY );
         $url_query        = explode( '&', $parsed_url_query );
 
-        $this->assertArrayHasKey( 'auth0__code_verifier', $_SESSION );
+        $this->assertArrayHasKey( 'icanid__code_verifier', $_SESSION );
         $this->assertStringContainsString( 'code_challenge=', $parsed_url_query );
         $this->assertContains( 'code_challenge_method=S256', $url_query );
     }
 
     public function testThatInvitationParametersAreExtracted()
     {
-        $auth0 = new Auth0( self::$baseConfig );
+        $icanid = new ICANID( self::$baseConfig );
 
         $_GET['invitation'] = '__test_invitation__';
         $_GET['organization'] = '__test_organization__';
         $_GET['organization_name'] = '__test_organization_name__';
 
-        $extracted = $auth0->getInvitationParameters();
+        $extracted = $icanid->getInvitationParameters();
 
         $this->assertIsObject($extracted, 'Invitation parameters were not extracted from the $_GET (environment variable seeded with query parameters during a GET request) successfully.');
 
@@ -554,11 +554,11 @@ class Auth0Test extends TestCase
 
     public function testThatInvitationParametersArentExtractedWhenIncomplete()
     {
-        $auth0 = new Auth0( self::$baseConfig );
+        $icanid = new ICANID( self::$baseConfig );
 
         $_GET['invitation'] = '__test_invitation__';
 
-        $extracted = $auth0->getInvitationParameters();
+        $extracted = $icanid->getInvitationParameters();
 
         $this->assertIsNotObject($extracted);
     }
@@ -582,13 +582,13 @@ class Auth0Test extends TestCase
                 'handler' => $handler,
             ]
         ]);
-        $auth0         = new Auth0( $custom_config );
+        $icanid         = new ICANID( $custom_config );
 
         $_GET['code']             = uniqid();
         $_GET['state']            = '__test_state__';
-        $_SESSION['auth0__state'] = '__test_state__';
+        $_SESSION['icanid__state'] = '__test_state__';
 
-        $auth0->exchange();
+        $icanid->exchange();
 
         $request_body = $request_history[0]['request']->getBody()->getContents();
         $request_body = json_decode($request_body, true);
@@ -620,12 +620,12 @@ class Auth0Test extends TestCase
             ]
         ]);
 
-        $auth0 = new Auth0( $custom_config );
+        $icanid = new ICANID( $custom_config );
 
         $_GET['state']            = '__test_state__';
-        $_SESSION['auth0__state'] = '__test_state__';
+        $_SESSION['icanid__state'] = '__test_state__';
 
-        $auth0->exchange();
+        $icanid->exchange();
 
         $request_body = $request_history[0]['request']->getBody()->getContents();
         $request_body = json_decode($request_body, true);
@@ -638,32 +638,32 @@ class Auth0Test extends TestCase
     {
         $custom_config            = self::$baseConfig;
         $custom_config['max_age'] = 1000;
-        $auth0                    = new Auth0( $custom_config );
+        $icanid                    = new ICANID( $custom_config );
 
-        $auth_url = $auth0->getLoginUrl();
+        $auth_url = $icanid->getLoginUrl();
 
         $parsed_url_query = parse_url( $auth_url, PHP_URL_QUERY );
         $url_query        = explode( '&', $parsed_url_query );
 
         $this->assertContains( 'max_age=1000', $url_query );
-        $this->assertArrayHasKey( 'auth0__max_age', $_SESSION );
-        $this->assertEquals( 1000, $_SESSION['auth0__max_age'] );
+        $this->assertArrayHasKey( 'icanid__max_age', $_SESSION );
+        $this->assertEquals( 1000, $_SESSION['icanid__max_age'] );
     }
 
     public function testThatMaxAgeIsOverriddenInLoginUrl()
     {
         $custom_config            = self::$baseConfig;
         $custom_config['max_age'] = 1000;
-        $auth0                    = new Auth0( $custom_config );
+        $icanid                    = new ICANID( $custom_config );
 
-        $auth_url = $auth0->getLoginUrl(['max_age' => 1001]);
+        $auth_url = $icanid->getLoginUrl(['max_age' => 1001]);
 
         $parsed_url_query = parse_url( $auth_url, PHP_URL_QUERY );
         $url_query        = explode( '&', $parsed_url_query );
 
         $this->assertContains( 'max_age=1001', $url_query );
-        $this->assertArrayHasKey( 'auth0__max_age', $_SESSION );
-        $this->assertEquals( 1001, $_SESSION['auth0__max_age'] );
+        $this->assertArrayHasKey( 'icanid__max_age', $_SESSION );
+        $this->assertEquals( 1001, $_SESSION['icanid__max_age'] );
     }
 
     /**
@@ -679,15 +679,15 @@ class Auth0Test extends TestCase
             'store' => new SessionStore(),
         ]);
 
-        $auth0    = new Auth0( $custom_config );
+        $icanid    = new ICANID( $custom_config );
         $id_token = self::getIdToken();
 
-        $_SESSION['auth0__nonce']   = '__test_nonce__';
-        $_SESSION['auth0__max_age'] = 1000;
-        $auth0->setIdToken( $id_token );
+        $_SESSION['icanid__nonce']   = '__test_nonce__';
+        $_SESSION['icanid__max_age'] = 1000;
+        $icanid->setIdToken( $id_token );
 
-        $this->assertEquals($id_token, $auth0->getIdToken());
-        $this->assertEquals($id_token, $_SESSION['auth0__id_token']);
+        $this->assertEquals($id_token, $icanid->getIdToken());
+        $this->assertEquals($id_token, $_SESSION['icanid__id_token']);
     }
 
     /**
@@ -696,13 +696,13 @@ class Auth0Test extends TestCase
     public function testThatIdTokenNonceIsCheckedWhenSet()
     {
         $custom_config = self::$baseConfig + ['id_token_alg' => 'HS256'];
-        $auth0         = new Auth0( $custom_config );
+        $icanid         = new ICANID( $custom_config );
         $id_token      = self::getIdToken();
 
-        $_SESSION['auth0__nonce'] = '__invalid_nonce__';
+        $_SESSION['icanid__nonce'] = '__invalid_nonce__';
         $e_message                = 'No exception caught';
         try {
-            $auth0->setIdToken( $id_token );
+            $icanid->setIdToken( $id_token );
         } catch (InvalidTokenException $e) {
             $e_message = $e->getMessage();
         }
@@ -716,13 +716,13 @@ class Auth0Test extends TestCase
     public function testThatIdTokenAuthTimeIsCheckedWhenSet()
     {
         $custom_config = self::$baseConfig + ['id_token_alg' => 'HS256', 'max_age' => 10 ];
-        $auth0         = new Auth0( $custom_config );
+        $icanid         = new ICANID( $custom_config );
         $id_token      = self::getIdToken();
 
-        $_SESSION['auth0__nonce'] = '__test_nonce__';
+        $_SESSION['icanid__nonce'] = '__test_nonce__';
         $e_message                = 'No exception caught';
         try {
-            $auth0->setIdToken( $id_token );
+            $icanid->setIdToken( $id_token );
         } catch (InvalidTokenException $e) {
             $e_message = $e->getMessage();
         }
@@ -738,12 +738,12 @@ class Auth0Test extends TestCase
      */
     public function testThatIdTokenOrganizationIsCheckedWhenSet()
     {
-        $auth0    = new Auth0( self::$baseConfig + [ 'id_token_alg' => 'HS256', 'organization' => '__test_organization__' ] );
+        $icanid    = new ICANID( self::$baseConfig + [ 'id_token_alg' => 'HS256', 'organization' => '__test_organization__' ] );
 
         $this->expectException(InvalidTokenException::class);
         $this->expectExceptionMessage('Organization Id (org_id) claim must be a string present in the ID token');
 
-        $auth0->decodeIdToken( self::getIdToken() );
+        $icanid->decodeIdToken( self::getIdToken() );
     }
 
     /**
@@ -751,9 +751,9 @@ class Auth0Test extends TestCase
      */
     public function testThatIdTokenOrganizationSucceesWhenMatched()
     {
-        $auth0 = new Auth0( self::$baseConfig + [ 'id_token_alg' => 'HS256', 'organization' => '__test_organization__' ] );
+        $icanid = new ICANID( self::$baseConfig + [ 'id_token_alg' => 'HS256', 'organization' => '__test_organization__' ] );
 
-        $decodedToken = $auth0->decodeIdToken( self::getIdToken([ 'org_id' => '__test_organization__' ]) );
+        $decodedToken = $icanid->decodeIdToken( self::getIdToken([ 'org_id' => '__test_organization__' ]) );
 
         $this->assertArrayHasKey( 'org_id', $decodedToken );
         $this->assertEquals( '__test_organization__', $decodedToken['org_id'] );
@@ -764,21 +764,21 @@ class Auth0Test extends TestCase
      */
     public function testThatIdTokenOrganizationFailsWhenMismatched()
     {
-        $auth0 = new Auth0( self::$baseConfig + [ 'id_token_alg' => 'HS256', 'organization' => '__test_organization__' ] );
+        $icanid = new ICANID( self::$baseConfig + [ 'id_token_alg' => 'HS256', 'organization' => '__test_organization__' ] );
 
         $this->expectException(InvalidTokenException::class);
         $this->expectExceptionMessage('Organization Id (org_id) claim value mismatch in the ID token; expected "__test_organization__", found "__bad_test_organization__"');
 
-        $auth0->decodeIdToken( self::getIdToken(['org_id' => '__bad_test_organization__',]) );
+        $icanid->decodeIdToken( self::getIdToken(['org_id' => '__bad_test_organization__',]) );
     }
 
     public function testThatDecodeIdTokenOptionsAreUsed()
     {
-        $auth0                    = new Auth0( self::$baseConfig + ['id_token_alg' => 'HS256'] );
-        $_SESSION['auth0__nonce'] = '__test_nonce__';
+        $icanid                    = new ICANID( self::$baseConfig + ['id_token_alg' => 'HS256'] );
+        $_SESSION['icanid__nonce'] = '__test_nonce__';
         $e_message                = 'No exception caught';
         try {
-            $auth0->decodeIdToken( self::getIdToken(), ['max_age' => 10 ] );
+            $icanid->decodeIdToken( self::getIdToken(), ['max_age' => 10 ] );
         } catch (InvalidTokenException $e) {
             $e_message = $e->getMessage();
         }
@@ -797,15 +797,15 @@ class Auth0Test extends TestCase
     public function testThatIdTokenLeewayFromConstructorIsUsed()
     {
         $custom_config = self::$baseConfig + ['id_token_leeway' => 120, 'id_token_alg' => 'HS256'];
-        $auth0         = new Auth0( $custom_config );
+        $icanid         = new ICANID( $custom_config );
 
         // Set the token expiration time past the default leeway of 60 seconds.
         $id_token = self::getIdToken(['exp' => time() - 100]);
 
-        $_SESSION['auth0__nonce'] = '__test_nonce__';
+        $_SESSION['icanid__nonce'] = '__test_nonce__';
 
-        $auth0->setIdToken( $id_token );
-        $this->assertEquals( $id_token, $auth0->getIdToken() );
+        $icanid->setIdToken( $id_token );
+        $this->assertEquals( $id_token, $icanid->getIdToken() );
     }
 
     public function testThatCacheHandlerCanBeSet()
@@ -818,7 +818,7 @@ class Auth0Test extends TestCase
         $handler->push( Middleware::history($request_history) );
 
         $pool = new ArrayCachePool();
-        $auth0 = new Auth0([
+        $icanid = new ICANID([
             'domain' => 'test.auth0.com',
             'client_id' => uniqid(),
             'redirect_uri' => uniqid(),
@@ -828,10 +828,10 @@ class Auth0Test extends TestCase
                 'handler' => $handler
             ]
         ]);
-        $_SESSION['auth0__nonce'] = '__test_nonce__';
+        $_SESSION['icanid__nonce'] = '__test_nonce__';
 
         try {
-            @$auth0->setIdToken(AsymmetricVerifierTest::getToken());
+            @$icanid->setIdToken(AsymmetricVerifierTest::getToken());
         } catch ( \Exception $e ) {
             // ...
         }

@@ -1,17 +1,17 @@
 <?php
-namespace Auth0\Tests\unit\API\Helpers;
+namespace ICANID\Tests\unit\API\Helpers;
 
-use Auth0\SDK\API\Helpers\ApiClient;
-use Auth0\SDK\API\Helpers\InformationHeaders;
-use Auth0\Tests\unit\API\Authentication\MockAuthenticationApi;
-use Auth0\Tests\unit\API\Management\MockManagementApi;
+use ICANID\SDK\API\Helpers\ApiClient;
+use ICANID\SDK\API\Helpers\InformationHeaders;
+use ICANID\Tests\unit\API\Authentication\MockAuthenticationApi;
+use ICANID\Tests\unit\API\Management\MockManagementApi;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class InformationHeadersExtendTest
  *
- * @package Auth0\Tests\unit\Api\Helpers
+ * @package ICANID\Tests\unit\Api\Helpers
  */
 class InformationHeadersExtendTest extends TestCase
 {
@@ -37,7 +37,7 @@ class InformationHeadersExtendTest extends TestCase
         $api->call()->connections()->getAll();
         $headers = $api->getHistoryHeaders();
 
-        $this->assertEquals( $new_headers->build(), $headers['Auth0-Client'][0] );
+        $this->assertEquals( $new_headers->build(), $headers['ICANID-Client'][0] );
     }
 
     /**
@@ -56,7 +56,7 @@ class InformationHeadersExtendTest extends TestCase
         $api->call()->oauth_token( [ 'grant_type' => uniqid() ] );
         $headers = $api->getHistoryHeaders();
 
-        $this->assertEquals( $new_headers->build(), $headers['Auth0-Client'][0] );
+        $this->assertEquals( $new_headers->build(), $headers['ICANID-Client'][0] );
     }
 
     /*

@@ -1,15 +1,15 @@
 <?php
-namespace Auth0\Tests\unit\API\Management;
+namespace ICANID\Tests\unit\API\Management;
 
-use Auth0\SDK\API\Management;
-use Auth0\SDK\Exception\CoreException;
+use ICANID\SDK\API\Management;
+use ICANID\SDK\Exception\CoreException;
 
-use Auth0\Tests\API\ApiTests;
+use ICANID\Tests\API\ApiTests;
 
 /**
  * Class RulesTest.
  *
- * @package Auth0\Tests\unit\API\Management
+ * @package ICANID\Tests\unit\API\Management
  */
 class RulesTest extends ApiTests
 {

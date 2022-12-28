@@ -1,16 +1,16 @@
 <?php
 
-namespace Auth0\Tests\integration\API\Management;
+namespace ICANID\Tests\integration\API\Management;
 
-use Auth0\SDK\API\Management;
-use Auth0\Tests\API\ApiTests;
+use ICANID\SDK\API\Management;
+use ICANID\Tests\API\ApiTests;
 use GuzzleHttp\Exception\ClientException;
-use Auth0\SDK\Exception\CoreException;
+use ICANID\SDK\Exception\CoreException;
 
 /**
  * Class ResourceServersIntegrationTest.
  *
- * @package Auth0\Tests\integration\API\Management
+ * @package ICANID\Tests\integration\API\Management
  */
 class ResourceServersIntegrationTest extends ApiTests
 {
@@ -50,7 +50,7 @@ class ResourceServersIntegrationTest extends ApiTests
      *
      * @return void
      *
-     * @throws \Auth0\SDK\Exception\ApiException
+     * @throws \ICANID\SDK\Exception\ApiException
      */
     public static function setUpBeforeClass(): void
     {

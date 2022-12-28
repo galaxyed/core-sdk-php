@@ -1,14 +1,14 @@
 <?php
-namespace Auth0\Tests\unit\API\Helpers;
+namespace ICANID\Tests\unit\API\Helpers;
 
-use Auth0\SDK\API\Helpers\InformationHeaders;
-use Auth0\SDK\API\Helpers\ApiClient;
+use ICANID\SDK\API\Helpers\InformationHeaders;
+use ICANID\SDK\API\Helpers\ApiClient;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Class InformationHeadersTest
  *
- * @package Auth0\Tests\unit\Api\Helpers
+ * @package ICANID\Tests\unit\Api\Helpers
  */
 class InformationHeadersTest extends TestCase
 {
@@ -94,7 +94,7 @@ class InformationHeadersTest extends TestCase
         $this->assertArrayHasKey( 'env', $header_data );
         $this->assertArrayHasKey( 'php', $header_data['env'] );
 
-        $this->assertEquals( 'auth0-php', $header_data['name'] );
+        $this->assertEquals( 'icanid-php', $header_data['name'] );
         $this->assertEquals( ApiClient::API_VERSION, $header_data['version'] );
         $this->assertEquals( phpversion(), $header_data['env']['php'] );
     }

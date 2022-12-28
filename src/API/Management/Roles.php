@@ -1,16 +1,16 @@
 <?php
 
-namespace Auth0\SDK\API\Management;
+namespace ICANID\SDK\API\Management;
 
-use Auth0\SDK\Exception\CoreException;
-use Auth0\SDK\Exception\EmptyOrInvalidParameterException;
-use Auth0\SDK\Exception\InvalidPermissionsArrayException;
+use ICANID\SDK\Exception\CoreException;
+use ICANID\SDK\Exception\EmptyOrInvalidParameterException;
+use ICANID\SDK\Exception\InvalidPermissionsArrayException;
 
 /**
  * Class Roles.
  * Handles requests to the Roles endpoint of the v2 Management API.
  *
- * @package Auth0\SDK\API\Management
+ * @package ICANID\SDK\API\Management
  */
 class Roles extends GenericResource
 {

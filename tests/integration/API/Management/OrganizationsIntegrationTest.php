@@ -1,20 +1,20 @@
 <?php
 
-namespace Auth0\Tests\integration\API\Management;
+namespace ICANID\Tests\integration\API\Management;
 
-use Auth0\SDK\API\Management;
-use Auth0\SDK\API\Management\Organizations;
-use Auth0\Tests\API\ApiTests;
+use ICANID\SDK\API\Management;
+use ICANID\SDK\API\Management\Organizations;
+use ICANID\Tests\API\ApiTests;
 
 /**
 * Class OrganizationsIntegrationTest.
-* Tests the Auth0\SDK\API\Management\Organizations class.
+* Tests the ICANID\SDK\API\Management\Organizations class.
 *
 * @group integration
 * @group management
 * @group organizations
 *
-* @package Auth0\Tests\integration\API\Management
+* @package ICANID\Tests\integration\API\Management
 */
 class OrganizationsIntegrationTest extends ApiTests
 {
@@ -60,7 +60,7 @@ class OrganizationsIntegrationTest extends ApiTests
   *
   * @return void
   *
-  * @throws \Auth0\SDK\Exception\ApiException
+  * @throws \ICANID\SDK\Exception\ApiException
   */
   public function setUp(): void
   {
@@ -89,7 +89,7 @@ class OrganizationsIntegrationTest extends ApiTests
     // Create a new connection for our tests
     $this->connection = $this->management->connections()->create([
       'name'            => uniqid('php-sdk-test-connection-'),
-      'strategy'        => 'auth0',
+      'strategy'        => 'icanid',
       'enabled_clients' => [ $env['APP_CLIENT_ID'] ]
     ]);
     $this->sleep();

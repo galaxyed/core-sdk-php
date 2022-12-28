@@ -1,9 +1,9 @@
 <?php
-namespace Auth0\Tests\unit;
+namespace ICANID\Tests\unit;
 
-use Auth0\SDK\API\Authentication;
-use Auth0\SDK\API\Management;
-use Auth0\SDK\Helpers\JWKFetcher;
+use ICANID\SDK\API\Authentication;
+use ICANID\SDK\API\Management;
+use ICANID\SDK\Helpers\JWKFetcher;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
@@ -12,7 +12,7 @@ use GuzzleHttp\Psr7\Request;
 /**
  * Class MockApi
  *
- * @package Auth0\Tests\unit
+ * @package ICANID\Tests\unit
  */
 abstract class MockApi
 {

@@ -1,5 +1,5 @@
 <?php
-namespace Auth0\SDK\API\Header;
+namespace ICANID\SDK\API\Header;
 
 class AuthorizationBearer extends Header
 {

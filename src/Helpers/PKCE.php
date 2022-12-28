@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace Auth0\SDK\Helpers;
+namespace ICANID\SDK\Helpers;
 
 /**
  * Class PKCE
  *
- * @package Auth0\SDK\Helpers
+ * @package ICANID\SDK\Helpers
  */
 class PKCE
 {
