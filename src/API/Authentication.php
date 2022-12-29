@@ -422,10 +422,18 @@ class Authentication
         if ($this->clientSecretAuthenticationMethod == 'client_secret_basic') {
             $request = $this->apiClient->method( 'post', false )
                         ->addPath( 'oauth2', 'token' )
-                        ->addFormParam( 'redirect_uri', $options['redirect_uri'] )
-                        ->addFormParam( 'code', $options['code'] )
-                        ->addFormParam( 'grant_type', $options['grant_type'] )
                         ->withHeader( new AuthorizationBasic( base64_encode( $options['client_id'] . ':' . $options['client_secret'] ) ) );
+
+            unset($options['client_id']);
+            unset($options['client_secret']);
+
+            foreach ($options as $key => $value) {
+                if ($key == 'icanid_forwarded_for') {
+                    continue;
+                }
+
+                $request = $request->addFormParam( $key, $value );
+            }
         } else { // client_secret_post
             $request = $this->apiClient->method( 'post' )
                         ->addPath( 'oauth2', 'token' )

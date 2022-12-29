@@ -626,6 +626,10 @@ class ICANID
 
         $this->setAccessToken($response['access_token']);
 
+        if (isset($response['refresh_token'])) {
+            $this->setRefreshToken($response['refresh_token']);
+        }
+
         if (isset($response['id_token'])) {
             $this->setIdToken($response['id_token']);
         }
