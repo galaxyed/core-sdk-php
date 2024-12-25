@@ -16,6 +16,7 @@ use ICANID\SDK\API\Header\ForwardedFor;
 use ICANID\SDK\API\Helpers\ApiClient;
 use ICANID\SDK\Exception\ApiException;
 use GuzzleHttp\Psr7;
+use ICANID\SDK\API\Header\ContentType;
 
 /**
  * Class Authentication
@@ -437,7 +438,8 @@ class Authentication
         } else { // client_secret_post
             $request = $this->apiClient->method( 'post' )
                         ->addPath( 'oauth2', 'token' )
-                        ->withBody( json_encode( $options ) );
+                        ->withHeader(new ContentType('application/x-www-form-urlencoded'))
+                        ->withBody( http_build_query( $options ) );
         }
 
         if (isset($options['icanid_forwarded_for'])) {
