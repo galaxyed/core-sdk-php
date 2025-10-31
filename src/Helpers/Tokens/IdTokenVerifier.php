@@ -50,7 +50,16 @@ final class IdTokenVerifier extends TokenVerifier
         $leeway = $options['leeway'] ?? $this->leeway;
 
         $tokenIat = $verifiedToken['iat'] ?? null;
-        if (! $tokenIat || ! is_int($tokenIat)) {
+        if (! $tokenIat) {
+            throw new InvalidTokenException('Issued At (iat) claim must be a number present in the ID token');
+        }
+        
+        // Convert DateTimeInterface to timestamp if needed (lcobucci/jwt v4)
+        if ($tokenIat instanceof \DateTimeInterface) {
+            $tokenIat = $tokenIat->getTimestamp();
+        }
+        
+        if (! is_int($tokenIat)) {
             throw new InvalidTokenException('Issued At (iat) claim must be a number present in the ID token');
         }
 
@@ -125,7 +134,18 @@ final class IdTokenVerifier extends TokenVerifier
         if (! empty($options['max_age'])) {
             $tokenAuthTime = $verifiedToken['auth_time'] ?? null;
 
-            if (! $tokenAuthTime || ! is_int($tokenAuthTime)) {
+            if (! $tokenAuthTime) {
+                throw new InvalidTokenException(
+                    'Authentication Time (auth_time) claim must be a number present in the ID token when Max Age (max_age) is specified'
+                );
+            }
+            
+            // Convert DateTimeInterface to timestamp if needed (lcobucci/jwt v4)
+            if ($tokenAuthTime instanceof \DateTimeInterface) {
+                $tokenAuthTime = $tokenAuthTime->getTimestamp();
+            }
+            
+            if (! is_int($tokenAuthTime)) {
                 throw new InvalidTokenException(
                     'Authentication Time (auth_time) claim must be a number present in the ID token when Max Age (max_age) is specified'
                 );

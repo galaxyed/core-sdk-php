@@ -3,8 +3,11 @@ declare(strict_types=1);
 
 namespace ICANID\SDK\Helpers\Tokens;
 
+use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Signer\Hmac\Sha256 as HsSigner;
+use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Token;
+use Lcobucci\JWT\Validation\Constraint\SignedWith;
 
 /**
  * Class SymmetricVerifier
@@ -30,6 +33,11 @@ final class SymmetricVerifier extends SignatureVerifier
     {
         $this->clientSecret = $clientSecret;
         parent::__construct('HS256');
+        
+        $this->config = Configuration::forSymmetricSigner(
+            new HsSigner(),
+            InMemory::plainText($clientSecret)
+        );
     }
 
     /**
@@ -41,7 +49,8 @@ final class SymmetricVerifier extends SignatureVerifier
      */
     protected function checkSignature(Token $token) : bool
     {
-        return $token->verify(new HsSigner(), $this->clientSecret);
+        $constraint = new SignedWith(new HsSigner(), InMemory::plainText($this->clientSecret));
+        return $this->config->validator()->validate($token, $constraint);
     }
 
     /**

@@ -5,8 +5,9 @@ namespace ICANID\SDK\Helpers\Tokens;
 
 use ICANID\SDK\Exception\InvalidTokenException;
 use InvalidArgumentException;
-use Lcobucci\JWT\Parser;
+use Lcobucci\JWT\Configuration;
 use Lcobucci\JWT\Token;
+use Lcobucci\JWT\Signer\Key\InMemory;
 
 /**
  * Class SignatureVerifier
@@ -24,11 +25,11 @@ abstract class SignatureVerifier
     private $alg;
 
     /**
-     * Token parser.
+     * JWT Configuration.
      *
-     * @var Token
+     * @var Configuration
      */
-    private $parser;
+    protected $config;
 
     /**
      * Check the token's signature.
@@ -46,8 +47,8 @@ abstract class SignatureVerifier
      */
     public function __construct(string $alg)
     {
-        $this->alg    = $alg;
-        $this->parser = new Parser();
+        $this->alg = $alg;
+        // Config will be set by child classes
     }
 
     /**
@@ -64,12 +65,12 @@ abstract class SignatureVerifier
     final public function verifyAndDecode(string $token) : Token
     {
         try {
-            $parsedToken = $this->parser->parse($token);
+            $parsedToken = $this->config->parser()->parse($token);
         } catch (InvalidArgumentException | \RuntimeException $e) {
             throw new InvalidTokenException( 'ID token could not be decoded' );
         }
 
-        $tokenAlg = $parsedToken->getHeader('alg', false);
+        $tokenAlg = $parsedToken->headers()->get('alg', false);
         if ($tokenAlg !== $this->alg) {
             throw new InvalidTokenException( sprintf(
                 'Signature algorithm of "%s" is not supported. Expected the ID token to be signed with "%s".',
