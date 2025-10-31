@@ -5,9 +5,11 @@ namespace ICANID\SDK\Helpers\Tokens;
 
 use ICANID\SDK\Exception\InvalidTokenException;
 use ICANID\SDK\Helpers\JWKFetcher;
-use Lcobucci\JWT\Signer\Key;
+use Lcobucci\JWT\Configuration;
+use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa\Sha256 as RsSigner;
 use Lcobucci\JWT\Token;
+use Lcobucci\JWT\Validation\Constraint\SignedWith;
 
 /**
  * Class AsymmetricVerifier
@@ -33,6 +35,9 @@ final class AsymmetricVerifier extends SignatureVerifier
     {
         $this->jwks = $jwks;
         parent::__construct('RS256');
+        
+        // Create unsecured config for parsing only
+        $this->config = Configuration::forUnsecuredSigner();
     }
 
     /**
